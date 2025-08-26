@@ -13,7 +13,7 @@ export default function GamePage() {
   
   useEffect(() => {
     // open websocket
-    const ws = new WebSocket(`ws://${WS_URL}/ws/game/${id}`);
+    const ws = new WebSocket(`wss://${location.host}/ws/game/${id}`);
 
     // when a message arrives:
     ws.onopen = () => console.log("WebSocket open!")
