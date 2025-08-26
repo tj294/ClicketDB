@@ -1,0 +1,15 @@
+.playing-xi {
+        border: 1px solid;
+        border-collapse: collapse;
+        text-align: center;
+        table-layout: fixed;
+        width: 70%;
+}
+
+.history {
+        border: 1px solid;
+        border-collapse: collapse;
+        text-align: center;
+        table-layout: fixed;
+        width: 40%;
+}

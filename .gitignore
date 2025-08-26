@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.env
+
+# Conda envs
+.envs/
+.venv/
+*.conda
+*.yml
+
+# Node
+frontend/node_modules/
+frontend/.next/

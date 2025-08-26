@@ -1,0 +1,13 @@
+name: ClicketProd
+channels:
+  - conda-forge
+dependencies:
+  - apscheduler
+  - fastapi
+  - numpy
+  - python=3.11
+  - scipy
+  - uvicorn
+  - gunicorn
+  - websockets
+  - sqlite
