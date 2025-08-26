@@ -7,7 +7,7 @@ from os import getenv
 load_dotenv()
 DB_NAME = getenv("DBNAME")
 
-router = APIRouter(prefix="/player", tags=["Players"])
+router = APIRouter(prefix="/api/player", tags=["Players"])
 
 
 @router.get("/{player_id}")

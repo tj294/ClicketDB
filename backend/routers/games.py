@@ -7,7 +7,7 @@ from os import getenv
 load_dotenv()
 DB_NAME = getenv("DBNAME")
 
-router = APIRouter(prefix="/game", tags=["Game"])
+router = APIRouter(prefix="/api/game", tags=["Game"])
 
 @router.get("/{matchID}")
 def get_live_match(matchID: int):

@@ -6,7 +6,7 @@ from os import getenv
 load_dotenv()
 DB_NAME = getenv("DBNAME")
 
-router = APIRouter(prefix="/tables", tags=["Tables"])
+router = APIRouter(prefix="/api/tables", tags=["Tables"])
 
 
 @router.get("/{season_id}")

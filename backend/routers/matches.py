@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models import fetch_all, fetch_one
 
-router = APIRouter(prefix="/matches", tags=["Matches"])
+router = APIRouter(prefix="/api/matches", tags=["Matches"])
 
 
 @router.get("/upcoming")
