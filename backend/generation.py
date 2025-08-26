@@ -173,7 +173,7 @@ def regenerate_fixtures():
     rounds["Round 12"] = local_matches
 
     # Schedule rounds: 2 rounds per day, 9am to 9pm (hourly games)
-    base_date = datetime.strptime("2025-08-18 09:00", "%Y-%m-%d %H:%M")  # Monday 9am
+    base_date = datetime.strptime("2025-08-25 09:00", "%Y-%m-%d %H:%M")  # Monday 9am
     match_entries = []
     matchNo = 0
     for day in range(6):  # Monday to Saturday

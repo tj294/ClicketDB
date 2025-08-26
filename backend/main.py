@@ -8,15 +8,24 @@ import sqlite3, json, asyncio
 from match_sim import simulate_match
 from classes import ConnectionManager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from dotenv import load_dotenv
 from os import getenv
+import logging
+from fastapi.logger import logger
 
 load_dotenv()
 DB_NAME = getenv("DBNAME")
 
+gunicorn_logger = logging.getLogger('gunicorn.error')
+logger.handlers = gunicorn_logger.handlers
+logger.setLevel(gunicorn_logger.level)
+
 app = FastAPI()
 manager = ConnectionManager()
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(
+        jobstores={'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')}
+        )
 
 #origins = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000", "http://127.0.0.1:8000"]
 origins = ["https://clicket-game.com", "http://clicket-game.com", "http://localhost:5173"]
@@ -37,20 +46,26 @@ app.include_router(games.router)
 app.include_router(season.router)
 
 async def check_matches():
+    logger.info("Checking for matches")
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
-    now = datetime.now()
-    print(now)
+    now = datetime.now().astimezone()
+    logger.info(f"Time is: {now}")
+    print("RUNNING MATCH CHECK\n")
     cur.execute("SELECT matchID FROM matches WHERE scheduledDate <= ? AND matchPlayed = 0", (now,))
     matches = cur.fetchall()
-    print(matches)
+    logger.info(f"Found matches")
+    logger.info(matches)
     for (matchID,) in matches:
         print(f"Starting match {matchID}")
         asyncio.create_task(simulate_match(matchID, manager))
 
 @app.on_event("startup")
 def start_scheduler():
-    scheduler.add_job(check_matches, "interval", hours=1, start_date="2025-08-22 13:00:00")
+    now = datetime.now()
+    start_date = "2025-08-24 09:00:00"
+    logger.info(f"{now}: Starting Scheduler, every hour from {start_date}")
+    scheduler.add_job(check_matches, "interval", hours=1, start_date=start_date)
     scheduler.start()
 
 @app.post("/start_match/{matchID}")
