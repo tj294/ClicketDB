@@ -46,7 +46,7 @@ app.include_router(live.router)
 app.include_router(games.router)
 app.include_router(season.router)
 
-async def check_matches(manager):
+async def check_matches():
     lock = FileLock("match_scheduler.lock")
     
     try:
@@ -79,7 +79,7 @@ def start_scheduler():
     now = datetime.now()
     start_date = "2025-08-24 09:00:00"
     logger.info(f"{now}: Starting Scheduler, every hour from {start_date}")
-    scheduler.add_job(check_matches, "interval", hours=1, start_date=start_date, args=[manager],)
+    scheduler.add_job(check_matches, "interval", hours=1, start_date=start_date)
     scheduler.start()
 
 @app.post("/start_match/{matchID}")
