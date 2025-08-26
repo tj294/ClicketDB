@@ -9,12 +9,14 @@ export default function HomePage() {
   const [league, setLeague] = useState([]);
 
   useEffect(() => {
-        axios.get("/upcoming_matches")
-        .then(res => setMatches(res.data))
+        fetch("/upcoming_matches")
+        .then((res) => res.json())
+        .then((data) => setMatches(data))
         .catch(err => console.error(err));
 
-        axios.get("/league_table")
-        .then(res => setLeague(res.data))
+        fetch("/league_table")
+        .then((res) => res.json())
+        .then((data) => setLeague(data))
         .catch(err => console.error(err));
   }, []);
 
