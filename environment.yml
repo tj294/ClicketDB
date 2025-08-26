@@ -11,3 +11,6 @@ dependencies:
   - gunicorn
   - websockets
   - sqlite
+  -pip
+  - pip:
+    - dotenv
