@@ -9,11 +9,11 @@ export default function HomePage() {
   const [league, setLeague] = useState([]);
 
   useEffect(() => {
-        axios.get("http://127.0.0.1:8000/upcoming_matches")
+        axios.get("/upcoming_matches")
         .then(res => setMatches(res.data))
         .catch(err => console.error(err));
 
-        axios.get("http://127.0.0.1:8000/league_table")
+        axios.get("/league_table")
         .then(res => setLeague(res.data))
         .catch(err => console.error(err));
   }, []);
