@@ -7,7 +7,7 @@ from os import getenv
 load_dotenv()
 DB_NAME = getenv("DBNAME")
 
-router = APIRouter(prefix="/api/", tags=["Live"])
+router = APIRouter(prefix="/api", tags=["Live"])
 
 
 @router.get("/live")
