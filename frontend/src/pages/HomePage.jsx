@@ -9,12 +9,12 @@ export default function HomePage() {
   const [league, setLeague] = useState([]);
 
   useEffect(() => {
-        fetch("/upcoming_matches")
+        fetch("/api/upcoming_matches")
         .then((res) => res.json())
         .then((data) => setMatches(data))
         .catch(err => console.error(err));
 
-        fetch("/league_table")
+        fetch("/api/league_table")
         .then((res) => res.json())
         .then((data) => setLeague(data))
         .catch(err => console.error(err));

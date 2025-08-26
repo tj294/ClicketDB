@@ -61,7 +61,7 @@ async def start_match(matchID: int, background_tasks: BackgroundTasks):
     print("main: ", manager, manager.active_connections)
     background_tasks.add_task(simulate_match, matchID, manager)
 
-@app.get("/upcoming_matches")
+@app.get("/api/upcoming_matches")
 def get_upcoming_matches():
     conn = sqlite3.connect("cricket_sim.db")
     conn.row_factory = sqlite3.Row
@@ -89,7 +89,7 @@ def get_upcoming_matches():
     conn.close()
     return matches
 
-@app.get("/league_table")
+@app.get("/api/league_table")
 def get_league_table():
     conn = sqlite3.connect("cricket_sim.db")
     conn.row_factory = sqlite3.Row
