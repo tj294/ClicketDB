@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function LiveRedirect() {
   const navigate = useNavigate();
   const [liveID, setLiveID] = useState(null);
@@ -8,7 +10,7 @@ export default function LiveRedirect() {
   useEffect(() => {
     // Fetch team info
     const fetchData = () => {
-      fetch(`http://127.0.0.1:8000/live`)
+      fetch(`${API_URL}/live`)
         .then((res) => res.json())
         .then((data) => {
           if (data) {

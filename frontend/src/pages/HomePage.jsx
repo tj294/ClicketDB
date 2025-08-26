@@ -4,17 +4,19 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import './HomePage.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function HomePage() {
   const [matches, setMatches] = useState([]);
   const [league, setLeague] = useState([]);
 
   useEffect(() => {
-        fetch("/api/upcoming_matches")
+        fetch(`${API_URL}/upcoming_matches`)
         .then((res) => res.json())
         .then((data) => setMatches(data))
         .catch(err => console.error(err));
 
-        fetch("/api/league_table")
+        fetch(`${API_URL}/league_table`)
         .then((res) => res.json())
         .then((data) => setLeague(data))
         .catch(err => console.error(err));
