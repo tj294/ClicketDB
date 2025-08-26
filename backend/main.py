@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from os import getenv
 import logging
 from fastapi.logger import logger
+from filelock import FileLock
 
 load_dotenv()
 DB_NAME = getenv("DBNAME")
@@ -46,19 +47,28 @@ app.include_router(games.router)
 app.include_router(season.router)
 
 async def check_matches():
-    logger.info("Checking for matches")
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-    now = datetime.now().astimezone()
-    logger.info(f"Time is: {now}")
-    print("RUNNING MATCH CHECK\n")
-    cur.execute("SELECT matchID FROM matches WHERE scheduledDate <= ? AND matchPlayed = 0", (now,))
-    matches = cur.fetchall()
-    logger.info(f"Found matches")
-    logger.info(matches)
-    for (matchID,) in matches:
-        print(f"Starting match {matchID}")
-        asyncio.create_task(simulate_match(matchID, manager))
+    lock = FileLock("match_scheduler.lock")
+
+    if not lock.acquire(timeout=1, poll_interval=0.1):
+        logger.info("Another scheduler is already running.")
+        return
+    
+    try:
+        logger.info("Checking for matches")
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+        now = datetime.now().astimezone()
+        logger.info(f"Time is: {now}")
+        cur.execute("SELECT matchID FROM matches WHERE scheduledDate <= ? AND matchPlayed = 0", (now,))
+        matches = cur.fetchall()
+        logger.info(f"Found matches:")
+        logger.info(matches)
+        for (matchID,) in matches:
+            logger.info(f"Starting match {matchID}")
+            asyncio.create_task(simulate_match(matchID, manager))
+    finally:
+        lock.release()
+
 
 @app.on_event("startup")
 def start_scheduler():
