@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import "./GamePage.css";
 import Collapsible from "../components/collapsible";
 
+const API_URL = import.meta.env.VITE_API_URL;
+const WS_URL = import.meta.env.VITE_WS_URL;
 
 export default function GamePage() {
   const { id } = useParams();
@@ -11,7 +13,7 @@ export default function GamePage() {
   
   useEffect(() => {
     // open websocket
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/game/${id}`);
+    const ws = new WebSocket(`ws://${WS_URL}/ws/game/${id}`);
 
     // when a message arrives:
     ws.onopen = () => console.log("WebSocket open!")

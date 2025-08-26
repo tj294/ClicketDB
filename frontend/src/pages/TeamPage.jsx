@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import './TeamPage.css';
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function TeamPage() {
   const { id } = useParams(); // The team ID from the URL
   const [teamData, setTeamData] = useState(null);
@@ -10,7 +12,7 @@ export default function TeamPage() {
 
   useEffect(() => {
     // Fetch team info
-    fetch(`http://127.0.0.1:8000/team/${id}`)
+    fetch(`${API_URL}/team/${id}`)
       .then((res) => res.json())
       .then((data) => setTeamData(data));
   }, [id]);

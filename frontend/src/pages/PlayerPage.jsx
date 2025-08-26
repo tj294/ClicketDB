@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 // import "./PlayerPage.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function PlayerPage() {
   const { id } = useParams(); // The team ID from the URL
   const [playerData, setPlayerData] = useState(null);
@@ -10,7 +12,7 @@ export default function PlayerPage() {
 
   useEffect(() => {
     // Fetch team info
-    fetch(`http://127.0.0.1:8000/player/${id}`)
+    fetch(`${API_URL}/player/${id}`)
       .then((res) => res.json())
       .then((data) => setPlayerData(data));
   }, [id]);

@@ -4,13 +4,15 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 // import './LeaguePage.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function SeasonSchedule({seasonID}) {
   const [season, setSeason] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://127.0.0.1:8000/season/${seasonID}`)
+    fetch(`${API_URL}/season/${seasonID}`)
     .then(res => res.json())
     .then(data => {
       setSeason(data || []);

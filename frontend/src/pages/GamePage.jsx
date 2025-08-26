@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import "./GamePage.css";
 import Collapsible from "../components/collapsible";
 
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function GamePage() {
   const { id } = useParams();
@@ -13,7 +14,7 @@ export default function GamePage() {
     let interval = null;
 
     const fetchData = async () => {
-      const res = await fetch(`http://127.0.0.1:8000/game/${id}`);
+      const res = await fetch(`${API_URL}/game/${id}`);
       const data = await res.json();
       setMatch(data);
       
