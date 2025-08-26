@@ -12,3 +12,7 @@ __pycache__/
 # Node
 frontend/node_modules/
 frontend/.next/
+
+.DS_Store
+*.db
+*.csv
