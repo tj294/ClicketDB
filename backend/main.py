@@ -138,9 +138,21 @@ async def websocket_endpoint(websocket: WebSocket, matchID: int):
     # conn.close()
     info = dict(row)
     if info['matchPlayed'] == 0:
-        homeTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()['name']
+        homeTeamInfo = cur.execute("SELECT * FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()
+        homeTeamName = homeTeamInfo['name']
+        homeTeamPoints = homeTeamInfo['gamesWon']*2 + 1*homeTeamInfo['gamesTied']
+        try:
+            hTNRR = (homeTeamInfo['runsScored'] / homeTeamInfo['oversFaced']) - (homeTeamInfo['runsConceded']/homeTeamInfo['oversBowled'])
+        except:
+            hTNRR = 0
         homeTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['homeTeamID'], ))
-        awayTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()['name']
+        awayTeamInfo = cur.execute("SELECT * FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()
+        awayTeamName = awayTeamInfo['name']
+        awayTeamPoints = awayTeamInfo['gamesWon']*2 + 1*awayTeamInfo['gamesTied']
+        try:
+            aTNRR = (awayTeamInfo['runsScored'] / awayTeamInfo['oversFaced']) - (awayTeamInfo['runsConceded']/awayTeamInfo['oversBowled'])
+        except:
+            aTNRR = 0
         awayTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['awayTeamID'], ))
         liveInfo = {
             "status": "Upcoming",
@@ -148,9 +160,23 @@ async def websocket_endpoint(websocket: WebSocket, matchID: int):
             "match": info['matchNo'],
             "homeTeam": homeTeamName,
             "homeTeamID": info['homeTeamID'],
+            "homeTeamTable": {
+                "M": homeTeamInfo['gamesPlayed'],
+                "W": homeTeamInfo['gamesWon'],
+                "L": homeTeamInfo['gamesLost'],
+                "PTS": homeTeamPoints,
+                "NRR": hTNRR
+            },
             "homePlayers": homeTeamPlayers,
             "awayTeam": awayTeamName,
             "awayTeamID": info['awayTeamID'],
+            "awayTeamTable": {
+                "M": awayTeamInfo['gamesPlayed'],
+                "W": awayTeamInfo['gamesWon'],
+                "L": awayTeamInfo['gamesLost'],
+                "PTS": awayTeamPoints,
+                "NRR": aTNRR
+            },
             "awayPlayers": awayTeamPlayers,
             "date": info['scheduledDate']
         }

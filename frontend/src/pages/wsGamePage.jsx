@@ -11,7 +11,7 @@ export default function GamePage() {
   const { id } = useParams();
   const [match, setMatch] = useState(null);
   const [tab, setTab] = useState("overview");
-  
+
   useEffect(() => {
     // open websocket
     const ws = new WebSocket(`${protocol}//${location.host}/ws/game/${id}`);
@@ -108,23 +108,58 @@ export default function GamePage() {
         <div className='match-title'>
           <h3>{match.homeTeam} vs {match.awayTeam}, Season {match.season} Match {match.match}</h3>
         </div>
-        <div className='team-totals'>
-          <p><strong><Link to={`/team/${match.homeTeamID}`}>{match.homeTeam}</Link></strong></p>
-          <p><strong><Link to={`/team/${match.awayTeamID}`}>{match.awayTeam}</Link></strong></p>
-          <p>Match begins at {roundTimeStr} on {roundDateStr}</p>
-        </div>
-        <div className='squads'>
-          <div className='squad' id='home-squad'>
-            <h3>{match.homeTeam}</h3>
-            {match.homePlayers.map((player, idx) => (
-              <p key={player.playerID}>{idx+1}: <Link to={`/player/${player.playerID}`}>{player.fname} {player.lname}</Link></p>
-            ))}
+        <div className='container'>
+          <div className='team-totals'>
+            <p><strong><Link to={`/team/${match.homeTeamID}`}>{match.homeTeam}</Link></strong></p>
+            <p><strong><Link to={`/team/${match.awayTeamID}`}>{match.awayTeam}</Link></strong></p>
+            <p>Match begins at {roundTimeStr} on {roundDateStr}</p>
           </div>
-          <div className='squad' id='away-squad'>
-            <h3>{match.awayTeam}</h3>
-            {match.awayPlayers.map((player, idx) => (
-              <p key={player.playerID}>{idx+1}: <Link to={`/player/${player.playerID}`}>{player.fname} {player.lname}</Link></p>
-            ))}
+          <div className='squads'>
+            <div className='squad' id='home-squad'>
+              <h3>{match.homeTeam}</h3>
+              {match.homePlayers.map((player, idx) => (
+                <p key={player.playerID}>{idx+1}: <Link to={`/player/${player.playerID}`}>{player.fname} {player.lname}</Link></p>
+              ))}
+            </div>
+            <div className='squad' id='away-squad'>
+              <h3>{match.awayTeam}</h3>
+              {match.awayPlayers.map((player, idx) => (
+                <p key={player.playerID}>{idx+1}: <Link to={`/player/${player.playerID}`}>{player.fname} {player.lname}</Link></p>
+              ))}
+            </div>
+          </div>
+          <div className='points'>
+            <strong>Points</strong>
+            <table id='points-table'>
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th title='Matches Played'>M</th>
+                  <th title='Wins'>W</th>
+                  <th title='Losses'>L</th>
+                  <th title='Points'>PTS</th>
+                  <th title='Net Run Rate'>NRR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><Link to={`/team/${match.homeTeamID}`}>{match.homeTeam}</Link></td>
+                  <td>{match.homeTeamTable.M}</td>
+                  <td>{match.homeTeamTable.W}</td>
+                  <td>{match.homeTeamTable.L}</td>
+                  <td><strong>{match.homeTeamTable.PTS}</strong></td>
+                  <td>{match.homeTeamTable.NRR.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td><Link to={`/team/${match.awayTeamID}`}>{match.awayTeam}</Link></td>
+                  <td>{match.awayTeamTable.M}</td>
+                  <td>{match.awayTeamTable.W}</td>
+                  <td>{match.awayTeamTable.L}</td>
+                  <td><strong>{match.awayTeamTable.PTS}</strong></td>
+                  <td>{match.awayTeamTable.NRR.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -264,7 +299,7 @@ export default function GamePage() {
                       <></>
                     )}
                     <div className="ball-text">
-                      <p>{ball.tag==='ball-comm' ? ball.label.split(': ')[1] : ball.label}</p>
+                      <p style={{marginBottom: 0}}>{ball.tag==='ball-comm' ? ball.label.split(': ')[1] : ball.label}</p>
                       <p>{ball.desc}</p>
                     </div>
                   </div>
