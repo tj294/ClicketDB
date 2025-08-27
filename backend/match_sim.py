@@ -608,7 +608,7 @@ def update_scorecard(liveID, conn, batting_team, bowling_team, target):
     for player in bowling_team:
         try:
             # print(player['O'])
-            flOvers = int(str(player['O']).split('.')[0]) + (int(str(player['O']).split('.')[1]) / 6)
+            flOvers = int(player['O']) + (round((player['O'] - int(player['O']))*10)/6)
             econ = flOvers and (player['RC'] / flOvers) or 0
             bowlingCard.append({
                 "ID": player['playerID'],
