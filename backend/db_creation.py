@@ -263,8 +263,10 @@ CREATE TABLE IF NOT EXISTS matches (
     lastBat TEXT,
     fbattingCard TEXT,
     fyetToBat TEXT,
+    fbowlingCard TEXT,
     sbattingCard TEXT,
     syetToBat TEXT,
+    sbowlingCard TEXT,
     FOREIGN KEY (homeTeamID) REFERENCES teams(teamID),
     FOREIGN KEY (awayTeamID) REFERENCES teams(teamID)
 )

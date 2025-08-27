@@ -220,9 +220,11 @@ async def websocket_endpoint(websocket: WebSocket, matchID: int):
         if info['sbattingCard'] == None:
             sbattingCard = None
             syetToBat = None
+            sbowlingCard = None
         else:
             sbattingCard = json.loads(info['sbattingCard'])
             syetToBat = json.loads(info['syetToBat'])
+            sbowlingCard = json.loads(info['sbowlingCard'])
         # logText = json.loads(info['log'])
         logText = []
         for log in json.loads(info['log']):
@@ -288,8 +290,10 @@ async def websocket_endpoint(websocket: WebSocket, matchID: int):
             "lBat": info['lastBat'],
             "fbattingCard": json.loads(info['fbattingCard']),
             "fyetToBat": json.loads(info['fyetToBat']),
+            "fbowlingCard": json.loads(info['fbowlingCard']),
             "sbattingCard": sbattingCard,
             "syetToBat": syetToBat,
+            "sbowlingCard": sbowlingCard,
             "log": logText
         }
         conn.close()
