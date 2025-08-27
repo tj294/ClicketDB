@@ -389,7 +389,7 @@ export default function GamePage() {
                   <table className='score-table'>
                     <thead>
                       <tr>
-                        <th style={{width: "50%", textAlign: "center"}}>Bowler</th>
+                        <th style={{width: "50%", textAlign: "left"}}>Bowler</th>
                         <th style={{width: "10%", textAlign: "center"}}>O</th>
                         <th style={{width: "10%", textAlign: "center"}}>M</th>
                         <th style={{width: "10%", textAlign: "center"}}>R</th>
