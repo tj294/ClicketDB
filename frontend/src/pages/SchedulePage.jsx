@@ -68,13 +68,13 @@ function SeasonSchedule({seasonID}) {
                   });
 
                   let statusText = "";
-                  if (m.matchPlayed === 1) statusText = <Link to={`/game/${m.matchID}`}>{m.result}</Link>;
-                  else if (m.matchPlayed === -1) statusText = <Link to={`/live`}>Live Now!</Link>;
+                  if (m.matchPlayed === 1) statusText = <Link to={`/game/${m.matchID}`} style={{color: `${m.winColor}`}}>{m.result}</Link>;
+                  else if (m.matchPlayed === -1) statusText = <Link to={`/live` } style={{backgroundColor: 'crimson', padding: '0.3rem', borderRadius: '0.2rem', }}>LIVE!</Link>;
                   else statusText = <Link to={`/game/${m.matchID}`}>Upcoming</Link>;
 
                   return (
                     <li key={i}>
-                      {time} - <Link to={`/team/${m.homeTeamID}`}>{m.homeTeamName}</Link> vs <Link to={`/team/${m.awayTeamID}`}>{m.awayTeamName}</Link>{" "}
+                      {time} - <Link to={`/team/${m.homeTeamID}`} style={{color: `${m.homeTeamColor}`}}>{m.homeTeamName}</Link> vs <Link to={`/team/${m.awayTeamID}`} style={{color: `${m.awayTeamColor}`}}>{m.awayTeamName}</Link>{" "}
                       {statusText && <strong>- {statusText}</strong>}
                     </li>
                   );

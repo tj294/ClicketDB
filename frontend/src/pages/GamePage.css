@@ -61,6 +61,11 @@ a:hover {
         border: 2px groove white;
 }
 
+#points-table td {
+        padding: 0.5em;
+        border-top: 2px solid grey;
+}
+
 #points-table thead {
         background-color: lightgrey;
         color: grey;

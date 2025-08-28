@@ -110,19 +110,19 @@ export default function GamePage() {
         </div>
         <div className='container'>
           <div className='team-totals'>
-            <p><strong><Link to={`/team/${match.homeTeamID}`}>{match.homeTeam}</Link></strong></p>
-            <p><strong><Link to={`/team/${match.awayTeamID}`}>{match.awayTeam}</Link></strong></p>
+            <p><strong><Link to={`/team/${match.homeTeamID}`} style={{color: `${match.homeTeamColor}`}}>{match.homeTeam}</Link></strong></p>
+            <p><strong><Link to={`/team/${match.awayTeamID}`} style={{color: `${match.awayTeamColor}`}}>{match.awayTeam}</Link></strong></p>
             <p>Match begins at {roundTimeStr} on {roundDateStr}</p>
           </div>
           <div className='squads'>
             <div className='squad' id='home-squad'>
-              <h3>{match.homeTeam}</h3>
+              <h3 style={{color: `${match.homeTeamColor}`}}>{match.homeTeam}</h3>
               {match.homePlayers.map((player, idx) => (
                 <p key={player.playerID}>{idx+1}: <Link to={`/player/${player.playerID}`}>{player.fname} {player.lname}</Link></p>
               ))}
             </div>
             <div className='squad' id='away-squad'>
-              <h3>{match.awayTeam}</h3>
+              <h3 style={{color: `${match.awayTeamColor}`}}>{match.awayTeam}</h3>
               {match.awayPlayers.map((player, idx) => (
                 <p key={player.playerID}>{idx+1}: <Link to={`/player/${player.playerID}`}>{player.fname} {player.lname}</Link></p>
               ))}
@@ -143,7 +143,7 @@ export default function GamePage() {
               </thead>
               <tbody>
                 <tr>
-                  <td><Link to={`/team/${match.homeTeamID}`}>{match.homeTeam}</Link></td>
+                  <td><Link to={`/team/${match.homeTeamID}`} style={{color: `${match.homeTeamColor}`}}>{match.homeTeam}</Link></td>
                   <td>{match.homeTeamTable.M}</td>
                   <td>{match.homeTeamTable.W}</td>
                   <td>{match.homeTeamTable.L}</td>
@@ -151,7 +151,7 @@ export default function GamePage() {
                   <td>{match.homeTeamTable.NRR.toFixed(2)}</td>
                 </tr>
                 <tr>
-                  <td><Link to={`/team/${match.awayTeamID}`}>{match.awayTeam}</Link></td>
+                  <td><Link to={`/team/${match.awayTeamID}`} style={{color: `${match.awayTeamColor}`}}>{match.awayTeam}</Link></td>
                   <td>{match.awayTeamTable.M}</td>
                   <td>{match.awayTeamTable.W}</td>
                   <td>{match.awayTeamTable.L}</td>
@@ -173,9 +173,9 @@ export default function GamePage() {
             <div className='match-title'><h3>{match.homeTeam} vs {match.awayTeam}, Season {match.season} Match {match.match}</h3></div>
           <div className="container">
             <div className='team-totals'>
-              <p><strong><Link to={`/team/${match.bfID}`}>{match.bfName}</Link></strong> {match.bfRuns}/{match.bfWickets} ({match.bfOvers}/20.0) CRR: {match.bfCRR.toFixed(2)}</p>
+              <p><strong><Link to={`/team/${match.bfID}`} style={{color: `${match.homeTeamColor}`}}>{match.bfName}</Link></strong> {match.bfRuns}/{match.bfWickets} ({match.bfOvers}/20.0) CRR: {match.bfCRR.toFixed(2)}</p>
 
-              <p><strong><Link to={`/team/${match.bsID}`}>{match.bsName}</Link></strong> {bsScore}</p>
+              <p><strong><Link to={`/team/${match.bsID}`} style={{color: `${match.awayTeamColor}`}}>{match.bsName}</Link></strong> {bsScore}</p>
 
               <p>{match.ballText}</p>
               <div className='tab-buttons'>
@@ -354,6 +354,7 @@ export default function GamePage() {
                   id='first-inning'
                   startOpen={true}
                   label={<><strong style={{fontSize: 20}}>{match.bfName}</strong></>}
+                  teamColor={`${match.homeTeamColor}`}
                 >
                   <table className='score-table'>
                     <thead style={{textAlign: "left"}}>
@@ -420,6 +421,7 @@ export default function GamePage() {
                     id='second-innings'
                     startOpen={true}
                     label={<><strong style={{fontSize: 20}}>{match.bsName}</strong>&nbsp;&nbsp;T: {match.bfRuns+1} in 20 overs</>}
+                    teamColor={`${match.awayTeamColor}`}
                   >
                     <table className='score-table'>
                       <thead style={{textAlign: "left"}}>
@@ -507,139 +509,140 @@ export default function GamePage() {
         {tab === "overview" && (
         <div>
           <div className='match-title'><h3>{match.homeTeam} vs {match.awayTeam}, Season {match.season} Match {match.match}</h3></div>
-          <div className='team-totals'>
-            <p><strong><Link to={`/team/${match.bfID}`}>{match.bfName}</Link></strong> {match.bfRuns}/{match.bfWickets} ({match.bfOvers}/20.0) CRR: {match.bfCRR.toFixed(2)}</p>
+            <div className='container'>
+              <div className='team-totals'>
+                <p><strong><Link to={`/team/${match.bfID}`} style={{color: `${match.homeTeamColor}`}}>{match.bfName}</Link></strong> {match.bfRuns}/{match.bfWickets} ({match.bfOvers}/20.0) CRR: {match.bfCRR.toFixed(2)}</p>
 
-            <p><strong><Link to={`/team/${match.bsID}`}>{match.bsName}</Link></strong> {bsScore}</p>
-            <div className='tab-buttons'>
-              <button onClick={() => setTab("overview")} className='tab-button' id="overview-button">Overview</button>
-              <button className='tab-button' onClick={() => setTab("scoreboard")} id='scoreboard-button'>Scoreboard</button>
-            </div>
-          </div>
-          <div className='summary'>
-            <div className='batters'>
-              <table className='summary-table'>
-                <thead className='summary-thead'>
-                  <tr>
-                    <th>
-                      Batters
-                    </th>
-                    <th title='Runs Scored'>
-                      R
-                    </th>
-                    <th title='Balls Faced'>
-                      B
-                    </th>
-                    <th title='Fours'>
-                      4s
-                    </th>
-                    <th title='Sixes'>
-                      6s
-                    </th>
-                    <th title='Strike Rate'>
-                      SR
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td id='striker'><Link to={`/player/${match.strikeID}`}>{match.strikeFName} {match.strikeLName}</Link></td>
-                    <td>{match.strikeRuns}</td>
-                    <td>{match.strikeBalls}</td>
-                    <td>{match.strikeFours}</td>
-                    <td>{match.strikeSixes}</td>
-                    <td>{match.strikeSR.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td id='non-striker'><Link to={`/player/${match.nstrikeID}`}>{match.nstrikeFName} {match.nstrikeLName}</Link></td>
-                    <td>{match.nstrikeRuns}</td>
-                    <td>{match.nstrikeBalls}</td>
-                    <td>{match.nstrikeFours}</td>
-                    <td>{match.nstrikeSixes}</td>
-                    <td>{match.nstrikeSR.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className='bowlers'>
-              <table className='summary-table'>
-                <thead className='summary-thead'>
-                  <tr>
-                    <th>
-                      Bowlers
-                    </th>
-                    <th title='Overs'>
-                      O
-                    </th>
-                    <th title='Maidens'>
-                      M
-                    </th>
-                    <th title='Runs Conceded'>
-                      R
-                    </th>
-                    <th title='Wickets Taken'>
-                      W
-                    </th>
-                    <th title='Economy'>
-                      Econ. 
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td id='striker'><Link to={`/player/${match.sbowlID}`}>{match.sbowlFName} {match.sbowlLName}</Link></td>
-                    <td>{match.sbowlOvers}</td>
-                    <td>{match.sbowlMaidens}</td>
-                    <td>{match.sbowlRuns}</td>
-                    <td>{match.sbowlWickets}</td>
-                    <td>{match.sbowlEcon.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td id='non-striker'><Link to={`/player/${match.nsbowlID}`}>{match.nsbowlFName} {match.nsbowlLName}</Link></td>
-                    <td>{match.nsbowlOvers}</td>
-                    <td>{match.nsbowlMaidens}</td>
-                    <td>{match.nsbowlRuns}</td>
-                    <td>{match.nsbowlWickets}</td>
-                    <td>{match.nsbowlEcon.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className='info-line'>
-            <span className='recent-balls'>
-              <p><strong>Over {match.currentOver}.{match.currentBall} | </strong> {match.overResults}</p>
-            </span>
-            <span className='last-bat'>
-              <p>{match.lBat}</p>
-            </span>
-          </div>
-          <div className='ball-description' style={{ maxHeight: "500px", overflowY: "auto" }}>
-              {match.log.toReversed().map((ball, idx) => (
-                <div className={ball.tag} key={idx}>
-                  <div className="ball-update">
-                    {(ball.tag==='ball-comm') ? (
-                      <>
-                        <div className="ball-number">
-                          <span>{ball.label.split(":")[0]}</span>
-                        </div>
-                        <div className='ball-value'>
-                          {console.log(match.overResults.split(" "))}
-                          <span className={`value-${ball.value}`}>{ball.value}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <></>
-                    )}
-                    <div className="ball-text">
-                      <p>{ball.tag==='ball-comm' ? ball.label.split(': ')[1] : ball.label}</p>
-                      <p>{ball.desc}</p>
-                    </div>
-                  </div>
+                <p><strong><Link to={`/team/${match.bsID}`} style={{color: `${match.awayTeamColor}`}}>{match.bsName}</Link></strong> {bsScore}</p>
+                <div className='tab-buttons'>
+                  <button onClick={() => setTab("overview")} className='tab-button' id="overview-button">Overview</button>
+                  <button className='tab-button' onClick={() => setTab("scoreboard")} id='scoreboard-button'>Scoreboard</button>
                 </div>
-              ))}
+              </div>
+              <div className='summary'>
+                <div className='batters'>
+                  <table className='summary-table'>
+                    <thead className='summary-thead'>
+                      <tr>
+                        <th>
+                          Batters
+                        </th>
+                        <th title='Runs Scored'>
+                          R
+                        </th>
+                        <th title='Balls Faced'>
+                          B
+                        </th>
+                        <th title='Fours'>
+                          4s
+                        </th>
+                        <th title='Sixes'>
+                          6s
+                        </th>
+                        <th title='Strike Rate'>
+                          SR
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td id='striker'><Link to={`/player/${match.strikeID}`}>{match.strikeFName} {match.strikeLName}</Link></td>
+                        <td>{match.strikeRuns}</td>
+                        <td>{match.strikeBalls}</td>
+                        <td>{match.strikeFours}</td>
+                        <td>{match.strikeSixes}</td>
+                        <td>{match.strikeSR.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td id='non-striker'><Link to={`/player/${match.nstrikeID}`}>{match.nstrikeFName} {match.nstrikeLName}</Link></td>
+                        <td>{match.nstrikeRuns}</td>
+                        <td>{match.nstrikeBalls}</td>
+                        <td>{match.nstrikeFours}</td>
+                        <td>{match.nstrikeSixes}</td>
+                        <td>{match.nstrikeSR.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div className='bowlers'>
+                  <table className='summary-table'>
+                    <thead className='summary-thead'>
+                      <tr>
+                        <th>
+                          Bowlers
+                        </th>
+                        <th title='Overs'>
+                          O
+                        </th>
+                        <th title='Maidens'>
+                          M
+                        </th>
+                        <th title='Runs Conceded'>
+                          R
+                        </th>
+                        <th title='Wickets Taken'>
+                          W
+                        </th>
+                        <th title='Economy'>
+                          Econ. 
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td id='striker'><Link to={`/player/${match.sbowlID}`}>{match.sbowlFName} {match.sbowlLName}</Link></td>
+                        <td>{match.sbowlOvers}</td>
+                        <td>{match.sbowlMaidens}</td>
+                        <td>{match.sbowlRuns}</td>
+                        <td>{match.sbowlWickets}</td>
+                        <td>{match.sbowlEcon.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td id='non-striker'><Link to={`/player/${match.nsbowlID}`}>{match.nsbowlFName} {match.nsbowlLName}</Link></td>
+                        <td>{match.nsbowlOvers}</td>
+                        <td>{match.nsbowlMaidens}</td>
+                        <td>{match.nsbowlRuns}</td>
+                        <td>{match.nsbowlWickets}</td>
+                        <td>{match.nsbowlEcon.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className='info-line'>
+                <span className='recent-balls'>
+                  <p><strong>Over {match.currentOver}.{match.currentBall} | </strong> {match.overResults}</p>
+                </span>
+                <span className='last-bat'>
+                  <p>{match.lBat}</p>
+                </span>
+              </div>
+              <div className='ball-description' style={{ maxHeight: "500px", overflowY: "auto" }}>
+                  {match.log.toReversed().map((ball, idx) => (
+                    <div className={ball.tag} key={idx}>
+                      <div className="ball-update">
+                        {(ball.tag==='ball-comm') ? (
+                          <>
+                            <div className="ball-number">
+                              <span>{ball.label.split(":")[0]}</span>
+                            </div>
+                            <div className='ball-value'>
+                              {console.log(match.overResults.split(" "))}
+                              <span className={`value-${ball.value}`}>{ball.value}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <></>
+                        )}
+                        <div className="ball-text">
+                          <p>{ball.tag==='ball-comm' ? ball.label.split(': ')[1] : ball.label}</p>
+                          <p>{ball.desc}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
-
         </div>
         )}
 
@@ -647,9 +650,9 @@ export default function GamePage() {
           <div>
             <div className='match-title'><h3>{match.homeTeam} vs {match.awayTeam}, Season {match.season} Match {match.match}</h3></div>
             <div className='team-totals-sc'>
-              <p><strong><Link to={`/team/${match.bfID}`}>{match.bfName}</Link></strong> {match.bfRuns}/{match.bfWickets} ({match.bfOvers}/20.0) CRR: {match.bfCRR.toFixed(2)}</p>
+              <p><strong><Link to={`/team/${match.bfID}`} style={{color: `${match.homeTeamColor}`}}>{match.bfName}</Link></strong> {match.bfRuns}/{match.bfWickets} ({match.bfOvers}/20.0) CRR: {match.bfCRR.toFixed(2)}</p>
 
-              <p><strong><Link to={`/team/${match.bsID}`}>{match.bsName}</Link></strong> {bsScore}</p>
+              <p><strong><Link to={`/team/${match.bsID}`} style={{color: `${match.awayTeamColor}`}}>{match.bsName}</Link></strong> {bsScore}</p>
               <div className='tab-buttons'>
                 <button onClick={() => setTab("overview")} className='tab-button' style={{borderBottomLeftRadius:"1em"}} id='overview-button'>Overview</button>
                 <button className='tab-button' onClick={() => setTab("scoreboard")} style={{borderBottomRightRadius:"1em"}} id='scoreboard-button'>Scoreboard</button>
@@ -661,6 +664,7 @@ export default function GamePage() {
                   id='first-inning'
                   startOpen={true}
                   label={<><strong style={{fontSize: 20}}>{match.bfName}</strong></>}
+                  teamColor={`${match.homeTeamColor}`}
                 >
                   <table className='score-table'>
                     <thead style={{textAlign: "left"}}>
@@ -690,13 +694,14 @@ export default function GamePage() {
                 </Collapsible>
               </div>
             </div>
-            <div className={match.sbattingCard ? 'scorecard' : 'fake-scorecard'}>
+            <div className={match.sbattingCard ? 'scorecard' : 'fake-scorecard'} style={{backgroundColor: `${match.awayTeamColor}`}}>
               <div className={'second-innings'}>
                 {match.sbattingCard ? (
                   <Collapsible
                     id='second-innings'
                     startOpen={true}
                     label={<><strong style={{fontSize: 20}}>{match.bsName}</strong>&nbsp;&nbsp;T: {match.bfRuns+1} in 20 overs</>}
+                    teamColor={`${match.awayTeamColor}`}
                   >
                     <table className='score-table'>
                       <thead style={{textAlign: "left"}}>
