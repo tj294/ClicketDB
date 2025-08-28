@@ -16,3 +16,4 @@ frontend/.next/
 .DS_Store
 *.db
 *.csv
+jobs.sqlite
