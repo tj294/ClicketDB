@@ -23,7 +23,7 @@ export default function TeamPage() {
 
   return (
     <div style={{ padding: "1rem", fontFamily: "Trebuchet MS"}}>
-      <h1>{teamData.team.name}</h1>
+      <h1 style={{ color: `${teamData.team.color}`, }}>{teamData.team.name}</h1>
       <table className='history'>
         <thead>
           <tr>
@@ -47,7 +47,7 @@ export default function TeamPage() {
         </tbody>
       </table>
 
-      <h2>Playing XI</h2>
+      <h2 style={{color: `${teamData.team.color}`}}>Playing XI</h2>
       <table className='playing-xi'>
         <thead className='playing-xi'>
           <tr className='playing-xi'>

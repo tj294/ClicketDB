@@ -22,9 +22,13 @@ async def websocket_endpoint(websocket: WebSocket, gameID: int):
             info = dict(row)
             print(info['matchPlayed'])
             if info['matchPlayed'] == 0:
-                homeTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()['name']
+                homeTeamInfo = cur.execute("SELECT name, color FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()
+                homeTeamName = homeTeamInfo['name']
+                homeTeamColor = homeTeamInfo['color']
                 homeTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['homeTeamID'], ))
-                awayTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()['name']
+                awayTeamInfo = cur.execute("SELECT name, color FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()
+                awayTeamName = awayTeamInfo['name']
+                awayTeamColor = awayTeamInfo['color']
                 awayTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['awayTeamID'], ))
                 liveInfo = {
                     "status": "Upcoming",
@@ -32,15 +36,22 @@ async def websocket_endpoint(websocket: WebSocket, gameID: int):
                     "match": info['matchNo'],
                     "homeTeam": homeTeamName,
                     "homeTeamID": info['homeTeamID'],
+                    "homeTeamColor": homeTeamColor
                     "homePlayers": homeTeamPlayers,
                     "awayTeam": awayTeamName,
                     "awayTeamID": info['awayTeamID'],
+                    "awayTeamColor": awayTeamColor
                     "awayPlayers": awayTeamPlayers,
                     "date": info['scheduledDate']
                 }
             elif info['matchPlayed'] == -1:
-                homeTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()['name']
-                awayTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()['name']
+                homeTeamInfo = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()
+                homeTeamName = homeTeamInfo['name']
+                homeTeamColor = homeTeamInfo['color']
+                awayTeamInfo = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()
+                awayTeamName = awayTeamInfo['name']
+                awayTeamColor = awayTeamInfo['color']
+                print(homeTeamColor)
                 if info['batFirstID'] == info['homeTeamID']:
                     batFirstName = homeTeamName
                     batSecondID = info['awayTeamID']
@@ -88,8 +99,10 @@ async def websocket_endpoint(websocket: WebSocket, gameID: int):
                     "match": info['matchNo'],
                     "homeTeam": homeTeamName,
                     "homeTeamID": info['homeTeamID'],
+                    "homeTeamColor": homeTeamColor,
                     "awayTeam": awayTeamName,
                     "awayTeamID": info['awayTeamID'],
+                    "awayTeamColor": awayTeamColor,
                     "bfName": batFirstName,
                     "bfID": info['batFirstID'],
                     "bsName": batSecondName,
@@ -149,8 +162,12 @@ async def websocket_endpoint(websocket: WebSocket, gameID: int):
                 }
             elif info['matchPlayed'] == 1:
                 # Needs refining to only necessary information
-                homeTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()['name']
-                awayTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()['name']
+                homeTeamInfo = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()
+                homeTeamName = homeTeamInfo['name']
+                homeTeamColor = homeTeamInfo['color']
+                awayTeamInfo = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()
+                awayTeamName = awayTeamInfo['name']
+                awayTeamColor = awayTeamInfo['color']
                 if info['batFirstID'] == info['homeTeamID']:
                     batFirstName = homeTeamName
                     batSecondID = info['awayTeamID']
@@ -198,8 +215,10 @@ async def websocket_endpoint(websocket: WebSocket, gameID: int):
                     "match": info['matchNo'],
                     "homeTeam": homeTeamName,
                     "homeTeamID": info['homeTeamID'],
+                    "homeTeamColor": homeTeamColor,
                     "awayTeam": awayTeamName,
                     "awayTeamID": info['awayTeamID'],
+                    "awayTeamColor": awayTeamColor,
                     "bfName": batFirstName,
                     "bfID": info['batFirstID'],
                     "bsName": batSecondName,

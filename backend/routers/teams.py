@@ -19,6 +19,7 @@ def get_team(team_id: int):
         SELECT 
             teamID AS ID,
             name,
+            color,
             gamesPlayed AS played,
             gamesWon AS won,
             gamesLost AS lost,

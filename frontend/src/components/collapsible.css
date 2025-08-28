@@ -13,7 +13,7 @@ button:hover {
   border-radius: 1em;
   text-align: left;
   color: #eee;
-  background-color: darkslategrey;
+  /* background-color: darkslategrey; */
 }
 
 .collapse-open {
@@ -24,7 +24,7 @@ button:hover {
   border-top-right-radius: 1em;
   text-align: left;
   color: #eee;
-  background-color: darkslategrey;
+  /* background-color: darkslategrey; */
 }
 
 .content {

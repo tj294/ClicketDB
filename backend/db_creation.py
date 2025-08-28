@@ -16,7 +16,7 @@ if os.path.exists(DB_NAME):
 
 # Define local rivals
 local_rivals = {
-    "Birmingham Bullfrogs": "Nottingham Nightingales",
+    "Birmingham Bullfrogs": "Lincoln Lightning",
     "Brighton Beachcombers": "Parliamentary Penpushers",
     "Bristol Bats": "Cardiff Cwtchers",
     "Cornwall Catastrophes": "Devon Devils",
@@ -26,7 +26,20 @@ local_rivals = {
 
 # Flatten to a unique list of teams
 all_teams = list(set(local_rivals.keys()) | set(local_rivals.values()))
-
+all_teams = [
+    {"ID": 1, "name": "Lincoln Lightning", "color": "#B00060"},
+    {"ID": 2, "name": "Birmingham Bullfrogs", "color": "#00B050"},
+    {"ID": 3, "name": "Cornwall Catastrophes", "color": "#E97132"},
+    {"ID": 4, "name": "Brighton Beachcombers", "color": "#FE01B7"},
+    {"ID": 5, "name": "Manchester Monsters", "color": "#0055FF"},
+    {"ID": 6, "name": "Cardiff Cwtchers", "color": "#EF000E"},
+    {"ID": 7, "name": "Bristol Bats", "color": "#00EFE1"},
+    {"ID": 8, "name": "Devon Devils", "color": "#32AAE9"},
+    {"ID": 9, "name": "Parliamentary Penpushers", "color": "#01FE48"},
+    {"ID": 10, "name": "Glasgow Goofballs", "color": "#7BD23C"},
+    {"ID": 11, "name": "Edinburgh XI", "color": "#933CD2"},
+    {"ID": 12, "name": "Yorkshire Puddings", "color": "#DCAE00"},
+]
 # Connect to the database
 conn = sqlite3.connect(DB_NAME)
 cursor = conn.cursor()
@@ -37,6 +50,7 @@ cursor.execute(
 CREATE TABLE teams (
     teamID INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
+    color TEXT,
     localRival INTEGER,
     gamesPlayed INTEGER DEFAULT 0,
     gamesWon INTEGER DEFAULT 0,
@@ -54,9 +68,8 @@ CREATE TABLE teams (
 # Insert teams
 team_ids = {}
 for team in all_teams:
-    cursor.execute("INSERT INTO teams (name) VALUES (?)", (team,))
-    team_ids[team] = cursor.lastrowid
-
+    cursor.execute("INSERT INTO teams (name, color) VALUES (?, ?)", (team['name'], team['color']))
+    team_ids[team['name']] = cursor.lastrowid
 # Set local rivals
 for team, rival in local_rivals.items():
     cursor.execute(
@@ -263,8 +276,10 @@ CREATE TABLE IF NOT EXISTS matches (
     lastBat TEXT,
     fbattingCard TEXT,
     fyetToBat TEXT,
+    fbowlingCard TEXT,
     sbattingCard TEXT,
     syetToBat TEXT,
+    sbowlingCard TEXT,
     FOREIGN KEY (homeTeamID) REFERENCES teams(teamID),
     FOREIGN KEY (awayTeamID) REFERENCES teams(teamID)
 )

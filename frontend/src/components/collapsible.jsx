@@ -5,6 +5,7 @@ const Collapsible = ( {
   id,
   label,
   children,
+  teamColor,
   disabled=false,
   startOpen=false,
   autoOpenWhenEnabled=false,
@@ -33,12 +34,14 @@ const Collapsible = ( {
     if (!disabled) setOpen((o) => !o);
   };
 
+  console.log(teamColor)
   return (
     <div>
       <button 
         className={open ? "collapse-open" : "collapse-shut"}
         onClick={toggle}
         disabled={disabled}
+        style={{backgroundColor: `${teamColor}`}}
       >
         {label}
       </button>

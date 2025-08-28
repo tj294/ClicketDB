@@ -22,26 +22,13 @@ async def ball_update(matchID):
     row = cur.execute(f"SELECT * FROM matches WHERE matchID = ?;", (matchID,)).fetchone()
     if row:
         info = dict(row)
-        if info['matchPlayed'] == 0:
-            homeTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()['name']
-            homeTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['homeTeamID'], ))
-            awayTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()['name']
-            awayTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['awayTeamID'], ))
-            liveInfo = {
-                "status": "Upcoming",
-                "season": info['season'],
-                "match": info['matchNo'],
-                "homeTeam": homeTeamName,
-                "homeTeamID": info['homeTeamID'],
-                "homePlayers": homeTeamPlayers,
-                "awayTeam": awayTeamName,
-                "awayTeamID": info['awayTeamID'],
-                "awayPlayers": awayTeamPlayers,
-                "date": info['scheduledDate']
-            }
-        elif info['matchPlayed'] == -1:
-            homeTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()['name']
-            awayTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()['name']
+        if info['matchPlayed'] == -1:
+            homeTeamInfo = cur.execute("SELECT name, color FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()
+            homeTeamName = homeTeamInfo['name']
+            homeTeamColor = homeTeamInfo['color']
+            awayTeamInfo = cur.execute("SELECT name, color FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()
+            awayTeamName = awayTeamInfo['name']
+            awayTeamColor = awayTeamInfo['color']
             if info['batFirstID'] == info['homeTeamID']:
                 batFirstName = homeTeamName
                 batSecondID = info['awayTeamID']
@@ -76,9 +63,11 @@ async def ball_update(matchID):
             if info['sbattingCard'] == None:
                 sbattingCard = None
                 syetToBat = None
+                sbowlingCard = None
             else:
                 sbattingCard = json.loads(info['sbattingCard'])
                 syetToBat = json.loads(info['syetToBat'])
+                sbowlingCard = json.loads(info['sbowlingCard'])
             # logText = json.loads(info['log'])
             logText = []
             try:
@@ -92,8 +81,10 @@ async def ball_update(matchID):
                 "match": info['matchNo'],
                 "homeTeam": homeTeamName,
                 "homeTeamID": info['homeTeamID'],
+                "homeTeamColor": homeTeamColor,
                 "awayTeam": awayTeamName,
                 "awayTeamID": info['awayTeamID'],
+                "awayTeamColor": awayTeamColor,
                 "bfName": batFirstName,
                 "bfID": info['batFirstID'],
                 "bsName": batSecondName,
@@ -147,120 +138,149 @@ async def ball_update(matchID):
                 "lBat": info['lastBat'],
                 "fbattingCard": json.loads(info['fbattingCard']),
                 "fyetToBat": json.loads(info['fyetToBat']),
+                "fbowlingCard": json.loads(info['fbowlingCard']),
                 "sbattingCard": sbattingCard,
                 "syetToBat": syetToBat,
+                "sbowlingCard": sbowlingCard,
                 "log": logText
             }
-        elif info['matchPlayed'] == 1:
-            # Needs refining to only necessary information
-            homeTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()['name']
-            awayTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()['name']
-            if info['batFirstID'] == info['homeTeamID']:
-                batFirstName = homeTeamName
-                batSecondID = info['awayTeamID']
-                batSecondName = awayTeamName
-            else:
-                batFirstName = awayTeamName
-                batSecondID = info['homeTeamID']
-                batSecondName = homeTeamName
-            if info['bFOvers'] == '19.6':
-                info['bFOvers'] = '20.0'
-            # Calculate Run Rate
-            if type(info['bFOvers']) == float:
-                    balls_faced = 0
-            else:
-                    balls_faced = int(info['bFOvers'].split('.')[0]) * 6 + int(info['bFOvers'].split('.')[1])
-            runs_scored = info['bFRuns']
-            if balls_faced == 0:
-                    bfCRR = 0.00
-            else:
-                    bfCRR = runs_scored / (int(balls_faced) / 6)
-            if info['bSOvers'] == "YTB":
-                bsCRR = 0.00
-                bsRRR = 0.00
-            else:
-                balls_faced = int(info['bSOvers'].split('.')[0]) * 6 + int(info['bSOvers'].split('.')[1])
-                balls_remaining = 120-balls_faced
-                bsCRR = info['bSRuns'] / (balls_faced/6)
-                if balls_remaining > 0:
-                    bsRRR = (info['bFRuns'] - info['bSRuns']) / (balls_remaining/6)
-                else:
-                    bsRRR = 0
-            if info['sbattingCard'] == None:
-                sbattingCard = None
-                syetToBat = None
-            else:
-                sbattingCard = json.loads(info['sbattingCard'])
-                syetToBat = json.loads(info['syetToBat'])
-            # logText = json.loads(info['log'])
-            logText = []
-            for log in json.loads(info['log']):
-                    logText.append(json.loads(log))
-            liveInfo = {
-                "status": "played",
-                "season": info['season'],
-                "match": info['matchNo'],
-                "homeTeam": homeTeamName,
-                "homeTeamID": info['homeTeamID'],
-                "awayTeam": awayTeamName,
-                "awayTeamID": info['awayTeamID'],
-                "bfName": batFirstName,
-                "bfID": info['batFirstID'],
-                "bsName": batSecondName,
-                "bsID": batSecondID,
-                "bfRuns": info['bFRuns'],
-                "bfWickets": info['bFWickets'],
-                "bfOvers": info['bFOvers'],
-                "bfCRR": bfCRR,
-                "bsRuns": info['bSRuns'],
-                "bsWickets": info['bSWickets'],
-                "bsOvers": info['bSOvers'],
-                "bsCRR": bsCRR,
-                "bsRRR": bsRRR,
-                "overResults": info['overResults'],
-                "ballEvent": info['ballEvent'],
-                "ballText": info['ballText'],
-                "currentOver": info['currentOver'],
-                "currentBall": info['currentBall'],
-                "strikeID": info['batter1ID'],
-                "strikeFName": info['batter1FName'],
-                "strikeLName": info['batter1LName'],
-                "strikeRuns": info['batter1Runs'],
-                "strikeBalls": info['batter1Balls'],
-                "strikeFours": info['batter1Fours'],
-                "strikeSixes": info['batter1Sixes'],
-                "strikeSR": info['batter1SR'],
-                "nstrikeID": info['batter2ID'],
-                "nstrikeFName": info['batter2FName'],
-                "nstrikeLName": info['batter2LName'],
-                "nstrikeRuns": info['batter2Runs'],
-                "nstrikeBalls": info['batter2Balls'],
-                "nstrikeFours": info['batter2Fours'],
-                "nstrikeSixes": info['batter2Sixes'],
-                "nstrikeSR": info['batter2SR'],
-                "sbowlID": info['bowler1ID'],
-                "sbowlFName": info['bowler1FName'],
-                "sbowlLName": info['bowler1LName'],
-                "sbowlOvers": info['bowler1Overs'],
-                "sbowlMaidens": info['bowler1Maidens'],
-                "sbowlRuns": info['bowler1Runs'],
-                "sbowlWickets": info['bowler1Wickets'],
-                "sbowlEcon": info['bowler1Econ'],
-                "nsbowlID": info['bowler2ID'],
-                "nsbowlFName": info['bowler2FName'],
-                "nsbowlLName": info['bowler2LName'],
-                "nsbowlOvers": info['bowler2Overs'],
-                "nsbowlMaidens": info['bowler2Maidens'],
-                "nsbowlRuns": info['bowler2Runs'],
-                "nsbowlWickets": info['bowler2Wickets'],
-                "nsbowlEcon": info['bowler2Econ'],
-                "lBat": info['lastBat'],
-                "fbattingCard": json.loads(info['fbattingCard']),
-                "fyetToBat": json.loads(info['fyetToBat']),
-                "sbattingCard": sbattingCard,
-                "syetToBat": syetToBat,
-                "log": logText
-            }
+        # elif info['matchPlayed'] == 0:
+        #     homeTeamInfo = cur.execute("SELECT name, color FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()
+        #     homeTeamName = homeTeamInfo['name']
+        #     homeTeamColor = homeTeamInfo['color']
+        #     homeTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['homeTeamID'], ))
+        #     awayTeamInfo = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()
+        #     awayTeamName = awayTeamInfo['name']
+        #     awayTeamColor = awayTeamInfo['color']
+        #     awayTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['awayTeamID'], ))
+        #     liveInfo = {
+        #         "status": "Upcoming",
+        #         "season": info['season'],
+        #         "match": info['matchNo'],
+        #         "homeTeam": homeTeamName,
+        #         "homeTeamID": info['homeTeamID'],
+        #         "homeTeamColor": homeTeamColor,
+        #         "homePlayers": homeTeamPlayers,
+        #         "awayTeam": awayTeamName,
+        #         "awayTeamID": info['awayTeamID'],
+        #         "awayTeamColor": awayTeamColor,
+        #         "awayPlayers": awayTeamPlayers,
+        #         "date": info['scheduledDate']
+        #     }
+        # elif info['matchPlayed'] == 1:
+        #     # Needs refining to only necessary information
+        #     homeTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?;", (int(info['homeTeamID']),)).fetchone()['name']
+        #     awayTeamName = cur.execute("SELECT name FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()['name']
+        #     if info['batFirstID'] == info['homeTeamID']:
+        #         batFirstName = homeTeamName
+        #         batSecondID = info['awayTeamID']
+        #         batSecondName = awayTeamName
+        #     else:
+        #         batFirstName = awayTeamName
+        #         batSecondID = info['homeTeamID']
+        #         batSecondName = homeTeamName
+        #     if info['bFOvers'] == '19.6':
+        #         info['bFOvers'] = '20.0'
+        #     # Calculate Run Rate
+        #     if type(info['bFOvers']) == float:
+        #             balls_faced = 0
+        #     else:
+        #             balls_faced = int(info['bFOvers'].split('.')[0]) * 6 + int(info['bFOvers'].split('.')[1])
+        #     runs_scored = info['bFRuns']
+        #     if balls_faced == 0:
+        #             bfCRR = 0.00
+        #     else:
+        #             bfCRR = runs_scored / (int(balls_faced) / 6)
+        #     if info['bSOvers'] == "YTB":
+        #         bsCRR = 0.00
+        #         bsRRR = 0.00
+        #     else:
+        #         balls_faced = int(info['bSOvers'].split('.')[0]) * 6 + int(info['bSOvers'].split('.')[1])
+        #         balls_remaining = 120-balls_faced
+        #         bsCRR = info['bSRuns'] / (balls_faced/6)
+        #         if balls_remaining > 0:
+        #             bsRRR = (info['bFRuns'] - info['bSRuns']) / (balls_remaining/6)
+        #         else:
+        #             bsRRR = 0
+        #     if info['sbattingCard'] == None:
+        #         sbattingCard = None
+        #         syetToBat = None
+        #         sbowlingCard = None
+        #     else:
+        #         sbattingCard = json.loads(info['sbattingCard'])
+        #         syetToBat = json.loads(info['syetToBat'])
+        #         sbowlingCard = json.loads(info['sbowlingCard'])
+        #     # logText = json.loads(info['log'])
+        #     logText = []
+        #     for log in json.loads(info['log']):
+        #             logText.append(json.loads(log))
+        #     liveInfo = {
+        #         "status": "played",
+        #         "season": info['season'],
+        #         "match": info['matchNo'],
+        #         "homeTeam": homeTeamName,
+        #         "homeTeamID": info['homeTeamID'],
+        #         "awayTeam": awayTeamName,
+        #         "awayTeamID": info['awayTeamID'],
+        #         "bfName": batFirstName,
+        #         "bfID": info['batFirstID'],
+        #         "bsName": batSecondName,
+        #         "bsID": batSecondID,
+        #         "bfRuns": info['bFRuns'],
+        #         "bfWickets": info['bFWickets'],
+        #         "bfOvers": info['bFOvers'],
+        #         "bfCRR": bfCRR,
+        #         "bsRuns": info['bSRuns'],
+        #         "bsWickets": info['bSWickets'],
+        #         "bsOvers": info['bSOvers'],
+        #         "bsCRR": bsCRR,
+        #         "bsRRR": bsRRR,
+        #         "overResults": info['overResults'],
+        #         "ballEvent": info['ballEvent'],
+        #         "ballText": info['ballText'],
+        #         "currentOver": info['currentOver'],
+        #         "currentBall": info['currentBall'],
+        #         "strikeID": info['batter1ID'],
+        #         "strikeFName": info['batter1FName'],
+        #         "strikeLName": info['batter1LName'],
+        #         "strikeRuns": info['batter1Runs'],
+        #         "strikeBalls": info['batter1Balls'],
+        #         "strikeFours": info['batter1Fours'],
+        #         "strikeSixes": info['batter1Sixes'],
+        #         "strikeSR": info['batter1SR'],
+        #         "nstrikeID": info['batter2ID'],
+        #         "nstrikeFName": info['batter2FName'],
+        #         "nstrikeLName": info['batter2LName'],
+        #         "nstrikeRuns": info['batter2Runs'],
+        #         "nstrikeBalls": info['batter2Balls'],
+        #         "nstrikeFours": info['batter2Fours'],
+        #         "nstrikeSixes": info['batter2Sixes'],
+        #         "nstrikeSR": info['batter2SR'],
+        #         "sbowlID": info['bowler1ID'],
+        #         "sbowlFName": info['bowler1FName'],
+        #         "sbowlLName": info['bowler1LName'],
+        #         "sbowlOvers": info['bowler1Overs'],
+        #         "sbowlMaidens": info['bowler1Maidens'],
+        #         "sbowlRuns": info['bowler1Runs'],
+        #         "sbowlWickets": info['bowler1Wickets'],
+        #         "sbowlEcon": info['bowler1Econ'],
+        #         "nsbowlID": info['bowler2ID'],
+        #         "nsbowlFName": info['bowler2FName'],
+        #         "nsbowlLName": info['bowler2LName'],
+        #         "nsbowlOvers": info['bowler2Overs'],
+        #         "nsbowlMaidens": info['bowler2Maidens'],
+        #         "nsbowlRuns": info['bowler2Runs'],
+        #         "nsbowlWickets": info['bowler2Wickets'],
+        #         "nsbowlEcon": info['bowler2Econ'],
+        #         "lBat": info['lastBat'],
+        #         "fbattingCard": json.loads(info['fbattingCard']),
+        #         "fyetToBat": json.loads(info['fyetToBat']),
+        #         "fbowlingCard": json.loads(info['fbowlingCard']),
+        #         "sbattingCard": sbattingCard,
+        #         "syetToBat": syetToBat,
+        #         "sbowlingCard": sbowlingCard,
+        #         "log": logText
+        #     }
     else:
         liveInfo = {"status": "No Match Found"}
     # print(liveInfo)
@@ -314,29 +334,27 @@ def create_live_db(conn, matchID, batTeamID, bfPlayers, bsPlayers):
     batter2 = {}
     for i, player in enumerate(bfPlayers):
         if i==0:
-            fbattingCard.append({"ID":player['playerID'], "name":f"{player['fname']} {player['lname']}", "runs": 0, "balls": 0, "howOut": "Not Out"})
+            fbattingCard.append({"ID":player['playerID'], "name":f"{player['fname']} {player['lname']}", "runs": 0, "balls": 0, "fours": 0, "sixes": 0, "Econ.": 0.00, "howOut": "Not Out"})
             batter1['ID'] = player['playerID']
             batter1['FName'] = player['fname']
             batter1['LName'] = player['lname']
         elif i==1:
-            fbattingCard.append({"ID":player['playerID'], "name":f"{player['fname']} {player['lname']}", "runs": 0, "balls": 0, "howOut": "Not Out"})
+            fbattingCard.append({"ID":player['playerID'], "name":f"{player['fname']} {player['lname']}", "runs": 0, "balls": 0, "fours": 0, "sixes": 0, "Econ.": 0.00, "howOut": "Not Out"})
             batter2['ID'] = player['playerID']
             batter2['FName'] = player['fname']
             batter2['LName'] = player['lname']
         else:
             fYTB.append({"ID": player['playerID'], "name": f"{player['fname']} {player['lname']}"})
-    sbattingCard = []
+    sbowlingCard = []
     sYTB = []
-    for i, player in enumerate(bsPlayers):
-        if i<2:
-            sbattingCard.append({"ID":player['playerID'], "name":f"{player['fname']} {player['lname']}", "runs": 0, "balls": 0, "howOut": "Not Out"})
-        else:
-            sYTB.append({"ID": player['playerID'], "name": f"{player['fname']} {player['lname']}"})
-        if i==10:
+    for i, player in enumerate(bsPlayers[::-1]):
+        if i==0:
+            sbowlingCard.append({"ID": player['playerID'], "name":f"{player['fname']} {player['lname']}", "O": "0.0", "M": 0, "R": 0, "W": 0, "Econ.": 0.00})
             bowl1ID = player['playerID']
             bowl1FName = player['fname']
             bowl1LName = player['lname']
-        elif i==9:
+        elif i==1:
+            sbowlingCard.append({"ID": player['playerID'], "name":f"{player['fname']} {player['lname']}", "O": "0.0", "M": 0, "R": 0, "W": 0, "Econ.": 0.00})
             bowl2ID = player['playerID']
             bowl2FName = player['fname']
             bowl2LName = player['lname']
@@ -383,10 +401,12 @@ def create_live_db(conn, matchID, batTeamID, bfPlayers, bsPlayers):
         bowler2Econ = 0.00,
         currentBall = 0,
         currentOver = 0,
+        log = NULL,
         fbattingCard = ?,
-        fyetToBat = ?
+        fyetToBat = ?,
+        fbowlingCard = ?
     WHERE matchID = ?
-    """, (batTeamID, batter1['ID'], batter1['FName'], batter1['LName'], batter2['ID'], batter2['FName'], batter2['LName'], bowl1ID, bowl1FName, bowl1LName, bowl2ID, bowl2FName, bowl2LName, json.dumps(fbattingCard), json.dumps(fYTB), matchID)
+    """, (batTeamID, batter1['ID'], batter1['FName'], batter1['LName'], batter2['ID'], batter2['FName'], batter2['LName'], bowl1ID, bowl1FName, bowl1LName, bowl2ID, bowl2FName, bowl2LName, json.dumps(fbattingCard), json.dumps(fYTB), json.dumps(sbowlingCard), matchID)
     )
     conn.commit()
     return matchID
@@ -575,17 +595,22 @@ def update_how_out(liveID, conn, desc, batter, bowler, delivery):
     conn.commit()
     batter['howOut'] = dismissal_text
 
-def update_scorecard(liveID, conn, batting_team, target):
+def update_scorecard(liveID, conn, batting_team, bowling_team, target):
     battingCard = []
+    bowlingCard = []
     yet_to_bat = []
     for player in batting_team:
         try:
             player['B']
+            sr = player['B'] and 100*player['RS'] / player['B'] or 0
             battingCard.append({
                 "ID": player['playerID'],
                 "name": f"{player['fname']} {player['lname']}",
                 "runs": player['RS'],
                 "balls": player['B'],
+                "fours": player['4s'],
+                "sixes": player['6s'],
+                "SR": sr,
                 "howOut": player['howOut']
             })
         except KeyError:
@@ -593,23 +618,42 @@ def update_scorecard(liveID, conn, batting_team, target):
                 "ID": player['playerID'],
                 "name": f"{player['fname']} {player['lname']}"
             })
+    for player in bowling_team:
+        try:
+            # print(player['O'])
+            flOvers = int(player['O']) + (round((player['O'] - int(player['O']))*10)/6)
+            econ = flOvers and (player['RC'] / flOvers) or 0
+            bowlingCard.append({
+                "ID": player['playerID'],
+                "name": f"{player['fname']} {player['lname']}",
+                "overs": player['O'],
+                "maidens": player['M'],
+                "runs": player['RC'],
+                "wickets": player['W'],
+                "econ": f"{econ:.2f}"
+            })
+        except KeyError:
+            pass
+
     if target < 0:
         conn.cursor().execute("""
             UPDATE matches
             SET 
                 fbattingCard = ?,
+                fbowlingCard = ?,
                 fyetToBat = ?
             WHERE matchID = ?
-        """, (json.dumps(battingCard), json.dumps(yet_to_bat), liveID))
+        """, (json.dumps(battingCard), json.dumps(bowlingCard), json.dumps(yet_to_bat), liveID))
         conn.commit()
     else:
         conn.cursor().execute("""
             UPDATE matches
             SET 
                 sbattingCard = ?,
+                sbowlingCard = ?,
                 syetToBat = ?
             WHERE matchID = ?
-        """, (json.dumps(battingCard), json.dumps(yet_to_bat), liveID))
+        """, (json.dumps(battingCard), json.dumps(bowlingCard), json.dumps(yet_to_bat), liveID))
         conn.commit()
     return
 
@@ -752,7 +796,7 @@ async def simulate_innings(liveID, batting_team, batTeamID, bowling_team, bowlTe
                 if runs % 2 == 1:
                     striker_index, non_striker_index = non_striker_index, striker_index
             update_live_state(liveID, conn, total_runs, wickets, f"{over}.{ball_in_over}", target, over_results, event, desc, batter, non_striker, sbowler, nsbowler, result)
-            update_scorecard(liveID, conn, batting_team, target)
+            update_scorecard(liveID, conn, batting_team, bowling_team, target)
             # asyncio.run(ball_update(liveID))
             await ball_update(liveID)
             # time.sleep(BALL_PAUSE)
