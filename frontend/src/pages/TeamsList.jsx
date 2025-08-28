@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import './TeamsList.css';
-import uk from "../assets/labeled-team-map.svg"
+import uk from "../assets/labeled-team-map-2.svg"
 import imageMapResize  from "image-map-resizer";
 
 export default function TeamList() {
@@ -38,7 +38,7 @@ export default function TeamList() {
           <area target="" alt="Brighton Beachcombers" title="Brighton Beachcombers" href="/team/4" coords="2220,2066,2421,2069,2052,1883,2028,1892,2004,1868,2001,1835,2031,1820,2058,1844,2061,1862,2460,2072,3159,2069,3162,2204,2223,2204" shape="poly" />
           <area target="" alt="Manchester Monsters" title="Manchester Monsters" href="/team/5" coords="216,867,1065,864,1065,930,1689,1331,1722,1319,1743,1346,1743,1364,1728,1385,1695,1382,1683,1355,1065,951,1071,1008,216,1002" shape="poly" />
           <area target="" alt="Cardiff Cwtchers" title="Cardiff Cwtchers" href="/team/6" coords="297,1580,972,1580,972,1640,1539,1709,1575,1703,1599,1712,1605,1733,1581,1757,1557,1748,1533,1733,978,1664,975,1715,297,1718" shape="poly" />
-          <area target="" alt="Bristol Bats" title="Bristol Bats" href="/team/7" coords="375,1787,855,1784,849,1844,1626,1742,1647,1700,1686,1706,1692,1739,1674,1757,1635,1772,1617,1763,849,1868,855,1925,366,1925" shape="poly" />
+          <area target="" alt="Bristol Bats" title="Bristol Bats" href="/team/7" coords="567,1778,1047,1775,1041,1835,1620,1742,1617,1715,1656,1697,1683,1718,1689,1748,1662,1766,1632,1757,1041,1859,1047,1916,558,1916,558,1862,561,1814" shape="poly" />
           <area target="" alt="Devon Devils" title="Devon Devils" href="/team/8" coords="1437,2078,1755,2081,1545,1913,1503,1910,1485,1868,1512,1838,1545,1856,1548,1883,1785,2078,1971,2072,1974,2210,1440,2213" shape="poly" />
           <area target="" alt="Parliamentary Penpushers" title="Parliamentary Penpushers" href="/team/9" coords="2373,1658,3384,1652,3390,1781,2373,1787,2379,1736,2064,1748,2022,1766,1998,1751,1995,1721,1998,1694,2028,1691,2064,1715,2379,1700" shape="poly" />
           <area target="" alt="Glasgow Goofballs" title="Glasgow Goofballs" href="/team/10" coords="183,456,927,450,930,585,885,585,1407,885,1458,882,1467,918,1449,948,1419,942,1401,906,861,591,180,588" shape="poly" />

@@ -94,7 +94,7 @@ def generate_players_per_team(n_players_per_team=11, start_date="Season 0"):
 
 # Dictionary of team name to local rival name
 local_rivals = {
-    "Birmingham Bullfrogs": "Nottingham Nightingales",
+    "Birmingham Bullfrogs": "Lincoln Lightning",
     "Brighton Beachcombers": "Parliamentary Penpushers",
     "Bristol Bats": "Cardiff Cwtchers",
     "Cornwall Catastrophes": "Devon Devils",
