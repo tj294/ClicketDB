@@ -26,7 +26,20 @@ local_rivals = {
 
 # Flatten to a unique list of teams
 all_teams = list(set(local_rivals.keys()) | set(local_rivals.values()))
-
+all_teams = [
+    "Nottingham Nightingales",
+    "Birmingham Bullfrogs",
+    "Cornwall Catastrophes",
+    "Brighton Beachcombers",
+    "Manchester Monsters",
+    "Cardiff Cwtchers",
+    "Bristol Bats",
+    "Devon Devils",
+    "Parliamentary Penpushers",
+    "Glasgow Goofballs",
+    "Edinburgh XI",
+    "Yorkshire Puddings"
+]
 # Connect to the database
 conn = sqlite3.connect(DB_NAME)
 cursor = conn.cursor()
