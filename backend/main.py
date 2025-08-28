@@ -50,7 +50,7 @@ async def check_matches():
 
 @app.on_event("startup")
 def start_scheduler():
-    scheduler.add_job(check_matches, "interval", hours=1, start_date="2025-08-22 13:00:00")
+    scheduler.add_job(check_matches, "interval", hours=1, start_date="2025-08-22 09:00:00")
     scheduler.start()
 
 @app.post("/start_match/{matchID}")
