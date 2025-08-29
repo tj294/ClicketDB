@@ -89,7 +89,7 @@ export default function GamePage() {
   };
 
   if (!match) {
-    return <div>Match not found.</div>
+    return <div>Loading Match...</div>
   }
   if (match.status === "Upcoming") {
     const roundDate = new Date(match.date);

@@ -18,7 +18,7 @@ export default function PlayerPage() {
   }, [id]);
 
   if (!playerData) {
-    return <p>Error 404: Player Page not implemented</p>;
+    return <p>Loading Player Page...</p>;
   }
 
   return (
