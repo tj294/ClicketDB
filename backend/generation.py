@@ -1,3 +1,4 @@
+from re import L
 import sqlite3
 from numpy.random import uniform
 import random
@@ -5,7 +6,7 @@ from datetime import date, timedelta, datetime
 from itertools import combinations
 from dotenv import load_dotenv
 from os import getenv
-import sys
+import sys, json
 
 load_dotenv()
 DB_NAME = getenv("DBNAME")
@@ -253,6 +254,194 @@ def visualize_schedule_distribution():
     conn.close()
 
 
+def verify_career_stats():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    # Load in player stats
+    rows = cursor.execute("SELECT * FROM player_career_stats ORDER BY playerID ASC").fetchall()
+    master_stats = {}
+    for player in rows:
+        player = dict(player)
+        # pstats[i]['matches_played'] = 0
+        player['matches_played'] = 0
+        player['innings_batted'] = 0
+        player['runs_scored'] = 0
+        player['balls_faced'] = 0
+        player['highest_score'] = "0"
+        player['highest_balls_faced'] = 0
+        player['best_bat_ID'] = 0
+        player['not_outs'] = 0
+        player['fifties'] = 0
+        player['hundreds'] = 0
+        player['fours'] = 0
+        player['sixes'] = 0
+        player['innings_bowled'] = 0
+        player['overs_bowled'] = '0.0'
+        player['maidens_bowled'] = 0
+        player['runs_conceded'] = 0
+        player['wickets_taken'] = 0
+        player['best_figures_wickets'] = 0
+        player['best_figures_runs'] = 0
+        player['best_bowl_ID'] = 0
+        master_stats[player['playerID']] = player
+    # print(master_stats)
+    # get all played matches
+    rows = cursor.execute("SELECT matchID, fbattingCard, fyetToBat, fbowlingCard, sbattingCard, syetToBat, sbowlingCard FROM matches WHERE matchPlayed=1 ORDER BY matchID ASC")
+    matches = cursor.fetchall()
+    for match in matches:
+        match = dict(match)
+        for player in json.loads(match['fbattingCard']):
+            # print(player)
+            ms = master_stats[player['ID']]
+            ms['matches_played'] += 1
+            ms['innings_batted'] += 1
+            ms['balls_faced'] += player['balls']
+            ms['runs_scored'] += player['runs']
+            if player['runs'] > int(ms['highest_score'].replace('*', '')):
+                ms['highest_score'] = str(player['runs'])
+                ms['highest_balls_faced'] = player['balls']
+                if player['howOut'] == 'Not Out':
+                    ms['highest_score'] += '*'
+                ms['best_bat_ID'] = match['matchID']
+            elif player['runs'] == int(ms['highest_score'].replace('*', '')):
+                if (player['howOut'] == "Not Out") and ("*" not in ms['highest_score']):
+                    ms['highest_score'] = str(player['runs']) + '*'
+                    ms['highest_balls_faced'] = player['balls']
+                    ms['best_bat_ID'] = match['matchID']
+                elif player['balls'] < ms['highest_balls_faced']:
+                    ms['highest_score'] = str(player['balls'])
+                    ms['highest_balls_faced'] = player['balls']
+                    ms['best_bat_ID'] = match['matchID']
+            if player['howOut'] == 'Not Out':
+                ms['not_outs'] += 1
+            if player['runs'] >= 100:
+                ms['hundreds'] += 1
+            elif player['runs'] >= 50:
+                ms['fifties'] += 1
+            ms['fours'] += player['fours']
+            ms['sixes'] += player['sixes']
+        for player in json.loads(match['fyetToBat']):
+            # print(player)
+            master_stats[player['ID']]['matches_played'] += 1
+        for player in json.loads(match['fbowlingCard']):
+            ms = master_stats[player['ID']]
+            ms['innings_bowled'] += 1
+            overs_bowled = f"{player['overs']:.1f}"
+            full_o, extra_b = overs_bowled.split('.')
+            if extra_b == '6':
+                full_o = str(int(full_o) + 1)
+                extra_b = '0'
+            career_o, career_b = ms['overs_bowled'].split('.')
+            career_o = str(int(career_o) + int(full_o))
+            career_b = int(career_b) + int(extra_b)
+            if career_b >= 6:
+                extra_o = career_b//6
+                career_o = f"{int(career_o)+int(extra_o)}"
+                career_b = career_b%6
+            ms['overs_bowled'] = f"{career_o}.{career_b}"
+            ms['maidens_bowled'] += player['maidens']
+            ms['runs_conceded'] += player['runs']
+            ms['wickets_taken'] += player['wickets']
+            if player['wickets'] > ms['best_figures_wickets']:
+                ms['best_figures_wickets'] = player['wickets']
+                ms['best_figures_runs'] = player['runs']
+                ms['best_bowl_ID'] = match['matchID']
+            elif player['wickets'] == ms['best_figures_wickets']:
+                if player['runs'] < ms['best_figures_runs']:
+                    ms['best_figures_wickets'] = player['wickets']
+                    ms['best_figures_runs'] = player['runs']
+                    ms['best_bowl_ID'] = match['matchID']
+        for player in json.loads(match['sbattingCard']):
+            ms = master_stats[player['ID']]
+            ms['matches_played'] += 1
+            ms['innings_batted'] += 1
+            ms['balls_faced'] += player['balls']
+            ms['runs_scored'] += player['runs']
+            if player['runs'] > int(ms['highest_score'].replace('*', '')):
+                ms['highest_score'] = str(player['runs'])
+                ms['highest_balls_faced'] = player['balls']
+                if player['howOut'] == 'Not Out':
+                    ms['highest_score'] += '*'
+                ms['best_bat_ID'] = match['matchID']
+            elif player['runs'] == int(ms['highest_score'].replace('*', '')):
+                if (player['howOut'] == "Not Out") and ("*" not in ms['highest_score']):
+                    ms['highest_score'] = str(player['runs']) + '*'
+                    ms['highest_balls_faced'] = player['balls']
+                    ms['best_bat_ID'] = match['matchID']
+                elif player['balls'] < ms['highest_balls_faced']:
+                    ms['highest_score'] = str(player['balls'])
+                    ms['highest_balls_faced'] = player['balls']
+                    ms['best_bat_ID'] = match['matchID']
+            if player['howOut'] == 'Not Out':
+                ms['not_outs'] += 1
+            if player['runs'] >= 100:
+                ms['hundreds'] += 1
+            elif player['runs'] >= 50:
+                ms['fifties'] += 1
+            ms['fours'] += player['fours']
+            ms['sixes'] += player['sixes']
+        for player in json.loads(match['syetToBat']):
+            master_stats[player['ID']]['matches_played'] += 1
+        for player in json.loads(match['sbowlingCard']):
+            ms = master_stats[player['ID']]
+            ms['innings_bowled'] += 1
+            overs_bowled = f"{player['overs']:.1f}"
+            full_o, extra_b = overs_bowled.split('.')
+            if extra_b == '6':
+                full_o = str(int(full_o) + 1)
+                extra_b = '0'
+            career_o, career_b = ms['overs_bowled'].split('.')
+            career_o = str(int(career_o) + int(full_o))
+            career_b = int(career_b) + int(extra_b)
+            if career_b >= 6:
+                extra_o = career_b//6
+                career_o = f"{int(career_o)+int(extra_o)}"
+                career_b = career_b%6
+            ms['overs_bowled'] = f"{career_o}.{career_b}"
+            ms['maidens_bowled'] += player['maidens']
+            ms['runs_conceded'] += player['runs']
+            ms['wickets_taken'] += player['wickets']
+            if player['wickets'] > ms['best_figures_wickets']:
+                ms['best_figures_wickets'] = player['wickets']
+                ms['best_figures_runs'] = player['runs']
+                ms['best_bowl_ID'] = match['matchID']
+            elif player['wickets'] == ms['best_figures_wickets']:
+                if player['runs'] < ms['best_figures_runs']:
+                    ms['best_figures_wickets'] = player['wickets']
+                    ms['best_figures_runs'] = player['runs']
+                    ms['best_bowl_ID'] = match['matchID']
+        # print()
+
+    for playerID in master_stats:
+        ms = master_stats[playerID]
+        cursor.execute("""
+            UPDATE player_career_stats
+            SET
+                matches_played=?,
+                innings_batted=?,
+                runs_scored=?,
+                balls_faced=?,
+                highest_score=?,
+                highest_balls_faced=?,
+                best_bat_ID=?,
+                not_outs=?,
+                fifties=?,
+                hundreds=?,
+                fours=?,
+                sixes=?,
+                innings_bowled=?,
+                overs_bowled=?,
+                maidens_bowled=?,
+                runs_conceded=?,
+                wickets_taken=?,
+                best_figures_wickets=?,
+                best_figures_runs=?,
+                best_bowl_ID=?
+            WHERE playerID=?;
+        """, (ms['matches_played'], ms['innings_batted'], ms['runs_scored'], ms['balls_faced'], ms['highest_score'], ms['highest_balls_faced'], ms['best_bat_ID'], ms['not_outs'], ms['fifties'], ms['hundreds'], ms['fours'], ms['sixes'], ms['innings_bowled'], ms['overs_bowled'], ms['maidens_bowled'], ms['runs_conceded'], ms['wickets_taken'], ms['best_figures_wickets'], ms['best_figures_runs'], ms['best_bowl_ID'], ms['playerID'],))
+    conn.commit()
+    conn.close()
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         today = datetime.strptime(sys.argv[1], "%Y-%m-%d")
