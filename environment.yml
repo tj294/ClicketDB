@@ -12,6 +12,8 @@ dependencies:
   - websockets
   - sqlite
   - sqlalchemy
+  - filelock
+  - argon2-cffi
   - pip
   - pip:
     - dotenv
