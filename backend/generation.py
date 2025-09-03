@@ -5,6 +5,7 @@ from datetime import date, timedelta, datetime
 from itertools import combinations
 from dotenv import load_dotenv
 from os import getenv
+import sys
 
 load_dotenv()
 DB_NAME = getenv("DBNAME")
@@ -121,7 +122,14 @@ def rotate(teams):
     return teams
 
 
-def regenerate_fixtures():
+def regenerate_fixtures(base_date=None):
+    if not base_date:
+        today = datetime.today()
+        day_diff = today - timedelta(
+            days=today.weekday()
+        )  # 0 = Monday, gives days til next monday
+        base_date = day_diff.replace(hour=9, minute=0, second=0, microsecond=0)
+        print(f"Generating Fixtures from {base_date}")
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     # Start New Season
@@ -173,7 +181,7 @@ def regenerate_fixtures():
     rounds["Round 12"] = local_matches
 
     # Schedule rounds: 2 rounds per day, 9am to 9pm (hourly games)
-    base_date = datetime.strptime("2025-08-25 09:00", "%Y-%m-%d %H:%M")  # Monday 9am
+    # base_date = datetime.strptime("2025-08-25 09:00", "%Y-%m-%d %H:%M")  # Monday 9am
     match_entries = []
     matchNo = 0
     for day in range(6):  # Monday to Saturday
@@ -188,7 +196,9 @@ def regenerate_fixtures():
                 matchNo += 1
                 match_time = start_time + timedelta(hours=i)
                 scheduledDate = match_time.strftime("%Y-%m-%d %H:%M")
-                match_entries.append((seasonID, matchNo, home_id, away_id, scheduledDate, round_number))
+                match_entries.append(
+                    (seasonID, matchNo, home_id, away_id, scheduledDate, round_number)
+                )
 
     # Insert into DB
     cursor.executemany(
@@ -242,5 +252,16 @@ def visualize_schedule_distribution():
 
     conn.close()
 
-if __name__ == '__main__':
-    regenerate_fixtures()
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        today = datetime.strptime(sys.argv[1], "%Y-%m-%d")
+    else:
+        today = datetime.today()
+
+    day_diff = (0 - today.weekday()) % 7  # 0 = Monday, gives days til next monday
+    base_date = today.replace(hour=9, minute=0, second=0, microsecond=0) + timedelta(
+        days=day_diff
+    )
+    print(f"Generating fixtures for w/c: {base_date}")
+    regenerate_fixtures(base_date)
