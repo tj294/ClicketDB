@@ -125,9 +125,9 @@ def rotate(teams):
 def regenerate_fixtures(base_date=None):
     if not base_date:
         today = datetime.today()
-        day_diff = today - timedelta(
+        day_diff = (today - timedelta(
             days=today.weekday()
-        )  # 0 = Monday, gives days til next monday
+        ))  # 0 = Monday, gives days til next monday
         base_date = day_diff.replace(hour=9, minute=0, second=0, microsecond=0)
         print(f"Generating Fixtures from {base_date}")
     conn = sqlite3.connect(DB_NAME)

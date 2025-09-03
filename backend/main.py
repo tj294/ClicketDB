@@ -1,11 +1,12 @@
 from fastapi import FastAPI, WebSocket, BackgroundTasks
 from models import fetch_all
-from routers import matches, teams, players, live, games, season
+from routers import matches, teams, players, live, games, season, account
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, List
-from datetime import datetime
+from typing import Dict, List, final
+from datetime import datetime, timedelta
 import sqlite3, json, asyncio
 from match_sim import simulate_match
+from generation import regenerate_fixtures
 from classes import ConnectionManager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -45,6 +46,7 @@ app.include_router(players.router)
 app.include_router(live.router)
 app.include_router(games.router)
 app.include_router(season.router)
+app.include_router(account.router)
 
 async def check_matches():
     lock = FileLock("match_scheduler.lock")
@@ -73,13 +75,34 @@ async def check_matches():
             lock.release()
             logger.info("Lock Released.")
 
+async def generate_season():
+    lock = FileLock("season_gen.lock")
+
+    try:
+        lock.acquire(timeout=1)
+        logger.info("Lock acquired, generating season")
+        today = datetime.today()
+        day_diff = (0 - today.weekday()) % 7
+        base_date = today.replace(hour=9, minute=0, second=0, microsecond=0) + timedelta(days=day_diff)
+        regenerate_fixtures(base_date)
+    except Timeout:
+        logger.info("Another scheduler is running, skip!")
+    
+    finally:
+         if lock.is_locked:
+              lock.release()
+              logger.info("Lock Released.")
+
+
 
 @app.on_event("startup")
 def start_scheduler():
     now = datetime.now()
     start_date = "2025-08-24 09:00:00"
+    season_gen_date = "2025-08-31 17:30:00"
     logger.info(f"{now}: Starting Scheduler, every hour from {start_date}")
     scheduler.add_job(check_matches, "interval", hours=1, start_date=start_date)
+    scheduler.add_job(generate_season, "interval", days=7, start_date=season_gen_date)
     scheduler.start()
 
 @app.post("/start_match/{matchID}")
