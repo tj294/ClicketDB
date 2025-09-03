@@ -17,3 +17,6 @@ frontend/.next/
 *.db
 *.csv
 jobs.sqlite
+*.lock
+settings.json
+*.png
