@@ -694,7 +694,7 @@ export default function GamePage() {
                 </Collapsible>
               </div>
             </div>
-            <div className={match.sbattingCard ? 'scorecard' : 'fake-scorecard'} style={{backgroundColor: `${match.awayTeamColor}`}}>
+            <div className={match.sbattingCard ? 'scorecard' : 'fake-scorecard'}>
               <div className={'second-innings'}>
                 {match.sbattingCard ? (
                   <Collapsible
