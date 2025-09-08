@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket, BackgroundTasks
 from models import fetch_all
-from routers import matches, teams, players, live, games, season, account
+from routers import matches, teams, players, live, games, season
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List, final
 from datetime import datetime, timedelta
@@ -23,10 +23,11 @@ gunicorn_logger = logging.getLogger('gunicorn.error')
 logger.handlers = gunicorn_logger.handlers
 logger.setLevel(gunicorn_logger.level)
 
-app = FastAPI()
+app = FastAPI()     
 manager = ConnectionManager()
 scheduler = AsyncIOScheduler(
-        jobstores={'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')}
+        jobstores={'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')},
+        job_defaults={'max_instances': 1, 'coalesce': True}
         )
 
 #origins = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000", "http://127.0.0.1:8000"]
@@ -46,7 +47,7 @@ app.include_router(players.router)
 app.include_router(live.router)
 app.include_router(games.router)
 app.include_router(season.router)
-app.include_router(account.router)
+# app.include_router(account.router)
 
 async def check_matches():
     lock = FileLock("match_scheduler.lock")
@@ -97,13 +98,25 @@ async def generate_season():
 
 @app.on_event("startup")
 def start_scheduler():
-    now = datetime.now()
-    start_date = "2025-08-24 09:00:00"
-    season_gen_date = "2025-08-31 17:30:00"
-    logger.info(f"{now}: Starting Scheduler, every hour from {start_date}")
-    scheduler.add_job(check_matches, "interval", hours=1, start_date=start_date)
-    scheduler.add_job(generate_season, "interval", days=7, start_date=season_gen_date)
-    scheduler.start()
+    logger.info("STARTING=========")
+    logger.info(scheduler.get_jobs())
+    if not scheduler.running:
+        logger.info("Starting Scheduler")
+        scheduler.start()
+        logger.info("Clearing Scheduler of {} leftover jobs".format(len(scheduler.get_jobs())))
+        for job in scheduler.get_jobs():
+            scheduler.remove_job(job.id)
+    logger.info(scheduler.get_jobs())
+    if not any(job.id=="check_matches" for job in scheduler.get_jobs()):
+        now = datetime.now()    
+        start_date = "2025-08-24 09:00:00"
+        logger.info(f"{now}: Starting Scheduler, every hour from {start_date}")
+        scheduler.add_job(check_matches, "interval", hours=1, start_date=start_date, id='check_matches', replace_existing=True)
+    if not any(job.id=='generate_season' for job in scheduler.get_jobs()):    
+        logger.info("Scheduling season generator")
+        season_gen_date = "2025-08-31 17:30:00"
+        scheduler.add_job(generate_season, "interval", days=7, start_date=season_gen_date, id='generate_season', replace_existing=True)
+    logger.info(scheduler.get_jobs())
 
 @app.post("/start_match/{matchID}")
 async def start_match(matchID: int, background_tasks: BackgroundTasks):
@@ -201,6 +214,7 @@ async def websocket_endpoint(websocket: WebSocket, matchID: int):
         homeTeamPlayers = fetch_all("SELECT p.fname, p.lname, p.playerID FROM players p JOIN player_teams pt ON p.playerID = pt.playerID WHERE pt.teamID = ?", (info['homeTeamID'], ))
         awayTeamInfo = cur.execute("SELECT * FROM teams WHERE teamID = ?", (info['awayTeamID'],)).fetchone()
         awayTeamName = awayTeamInfo['name']
+        awayTeamColor = awayTeamInfo['color']
         awayTeamColor = awayTeamInfo['color']
         awayTeamPoints = awayTeamInfo['gamesWon']*2 + 1*awayTeamInfo['gamesTied']
         try:
@@ -756,4 +770,3 @@ async def websocket_endpoint(websocket: WebSocket, matchID: int):
         # # print(liveInfo)
         # print("Sending Info")
     #     await websocket.send_text(json.dumps(liveInfo))
-    #     await asyncio.sleep(100)
