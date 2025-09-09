@@ -27,3 +27,11 @@ export default function LiveRedirect() {
   // navigate(`/game/${liveID}`);
 
 }
+
+export function NoLivePage() {
+  return (
+    <div>
+      <h1>No Upcoming Matches</h1>
+    </div>
+  )
+}
