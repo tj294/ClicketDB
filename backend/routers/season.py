@@ -9,6 +9,19 @@ DB_NAME = getenv("DBNAME")
 
 router = APIRouter(prefix="/api/season", tags=["Season"])
 
+@router.get("/all")
+def get_all_seasons():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("""
+                SELECT DISTINCT season FROM matches ORDER BY season;
+                """)
+    seasons = [row[0] for row in cur.fetchall()]
+    print(seasons)
+    return seasons
+                
+    
 
 @router.get("/{seasonID}")
 def upcoming_matches(seasonID: int):

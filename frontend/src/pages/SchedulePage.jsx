@@ -89,28 +89,39 @@ function SeasonSchedule({seasonID}) {
 }
 
 export default function SchedulePage() {
-  const [matches, setMatches] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [league, setLeague] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState("1");
 
-  // useEffect(() => {
-  //       fetch("http://127.0.0.1:8000/upcoming_matches")
-  //       .then(res => res.json())
-  //       .catch(data => setMatches(data));
-  // }, []);
+  useEffect(() => {
+    fetch("/api/season/all")
+      .then(res => res.json())
+      .then(data => {
+        setSeasons(data);
+        if (data.length > 0) {
+          const latest = Math.max(...data);
+          setSelectedSeason(latest.toString());
+        }
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   return (
     <div>
       <h1>Fixtures & Results</h1>
-      <label> <select name='dropdown' 
-      value={selectedSeason}
-      onChange={e => setSelectedSeason(e.target.value)}
-      >
-          <option value="1">Season 1</option>
-          <option value="2">Season 2</option>
-          <option value="3">Season 3</option>
+
+      {seasons.length > 0 && (
+        <label>
+          <select name='dropdown' 
+        value={selectedSeason}
+        onChange={e => setSelectedSeason(e.target.value)}
+        >
+            {seasons.map(season => (
+              <option key={season} value={season}>Season {season}</option>
+          ))}
         </select>
       </label>
+      )}
 
     <SeasonSchedule seasonID={selectedSeason} />
 
