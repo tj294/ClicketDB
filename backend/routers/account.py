@@ -1,0 +1,123 @@
+from sqlalchemy import JSON
+from fastapi import APIRouter, Form, Request
+from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+from models import fetch_all, fetch_one
+from typing import Annotated
+import sqlite3, json
+from dotenv import load_dotenv
+from os import getenv
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+
+load_dotenv()
+ACC_DB = getenv("ACC_DB")
+
+router = APIRouter(prefix="/api/account", tags=["Account"])
+ph = PasswordHasher()
+
+@router.post("/login")
+def login(uname: Annotated[str, Form()], pswd: Annotated[str, Form()]):
+        conn = sqlite3.connect(ACC_DB)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        row = cur.execute("SELECT * FROM users WHERE username = ?;", (uname,)).fetchone()
+        if row is None:
+                print(f"Username {uname} not found.")
+                return JSONResponse(content={"logged-in": 0, 'error':"Username not found"}, status_code=401)
+        else:
+                userInfo = dict(row)
+                try:
+                        ph.verify(userInfo['hashedPassword'], pswd)
+                        print(f"User {uname} logged in.")
+                        response = JSONResponse(content={'logged-in': 1, "username": uname})
+                        response.set_cookie(
+                                key='session',
+                                value=uname,
+                                httponly=True,
+                                secure=True,
+                                samesite='lax'
+                        )
+                        return response
+                except VerifyMismatchError:
+                        print(f"User {uname} log-in failed. Password incorrect")
+                        return JSONResponse(content={"logged-in": 0, 'error': 'Incorrect Password'}, status_code=401)
+
+@router.post("/create")
+def create_login(uname: Annotated[str, Form()], pswd: Annotated[str, Form()], conf_pswd: Annotated[str, Form()]):
+        if pswd != conf_pswd:
+                print("Password Don't Match")
+                return {"account-created": 0, "error": "Passwords do not match"}
+        else:
+                phash = ph.hash(pswd)
+                
+                conn=sqlite3.connect(ACC_DB)
+                conn.row_factory = sqlite3.Row
+                cur = conn.cursor()
+                try:
+                        cur.execute("""
+                                INSERT INTO
+                                        users (username, hashedPassword)
+                                VALUES
+                                        (?, ?);
+                        """, (uname, phash))
+                except sqlite3.IntegrityError:
+                        print("Username Taken")
+                        conn.close()
+                        return {"account-created": 0, "error": "Username already exists"}
+                conn.commit()
+                conn.close()
+                return {"account-created": 1}
+        
+@router.get("/detail/{uname}")
+def get_user_info(uname):
+        conn = sqlite3.connect(ACC_DB)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        row = cur.execute("SELECT * FROM users WHERE username=?;", (uname,)).fetchone()
+        return JSONResponse(content={"ID": row['userID'], "uname": row['username'], "favTeam": row['favTeam'], "coins": row['coins']}, status_code=200)
+
+@router.get("/me")
+def me(request: Request):
+        print("Getting Cookie:")
+        user = request.cookies.get("session")
+        if not user:
+                print("No User")
+                return {"logged-in": 0}
+        else:
+                print("Logged in as", user)
+                return {"logged-in": 1, "username": user}
+
+@router.post("/logout")
+def logout():
+        response = JSONResponse({"logged-in": 0})
+        response.delete_cookie("session")
+        return response
+
+@router.post("/{userID}/beg")
+def beg(userID):
+        conn = sqlite3.connect(ACC_DB)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        uCoins = dict(cur.execute("SELECT coins FROM users WHERE userID=?;", (userID,)).fetchone())['coins']
+        if uCoins:
+                return JSONResponse({"status": 1, "error": "You have coins!"})
+        else:
+                cur.execute("UPDATE users SET coins=10 WHERE userID=?;", (userID,))
+                conn.commit()
+                return JSONResponse({"status": 0})
+
+class FavTeamUpdate(BaseModel):
+        userID: int
+        teamID: int
+
+@router.post("/favTeam")
+def changeFavTeam(update: FavTeamUpdate):
+        print(update.userID)
+        conn = sqlite3.connect(ACC_DB)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("UPDATE users SET favTeam=? WHERE userID=?;", 
+                    (update.teamID, update.userID))
+        conn.commit()
+        print(f"Updated User {update.userID}'s fave team to {update.teamID}")

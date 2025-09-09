@@ -1,0 +1,21 @@
+#favTeam {
+    margin-left: 1em;
+    background-color: #222;
+}
+
+option {
+    color: #B00060;
+}
+
+.beg-button {
+    background-color: darkcyan;
+    color: #fff;
+    padding: 0.5em;
+    border-radius: 1em;
+    border: 2px solid white;
+}
+
+.beg-button:hover {
+    cursor: pointer;
+    background-color: cyan;
+}
