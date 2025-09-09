@@ -20,3 +20,4 @@ jobs.sqlite
 *.lock
 settings.json
 *.png
+*.pptx
