@@ -5,10 +5,25 @@ import axios from "axios";
 // import './LeaguePage.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
+const teamList = {
+        1: 'Lincoln Lightning',
+        2: 'Birmingham Bullfrogs',
+        3: 'Cornwall Catastrophes',
+        4: 'Brighton Beachcombers',
+        5: 'Manchester Monsters',
+        6: 'Cardiff Cwtchers',
+        7: 'Bristol Bats',
+        8: 'Devon Devils',
+        9: 'Parliamentary Penpushers',
+        10: 'Glasgow Goofballs',
+        11: 'Edinburgh XI',
+        12: 'Yorkshire Puddings'
+}
+    
 function SeasonSchedule({seasonID}) {
   const [season, setSeason] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTeam, setSelectedTeam] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -28,8 +43,12 @@ function SeasonSchedule({seasonID}) {
   if (loading) return <p>Loading season {seasonID}...</p>;
   if (season.length === 0) return <p>No matches found for season {seasonID}.</p>;
 
+  const filtered = selectedTeam ? season.filter(
+    m => m.homeTeamID.toString() === selectedTeam || m.awayTeamID.toString() === selectedTeam
+  ) : season;
+
   // Group matches by round
-  const rounds = season.reduce((acc, match) => {
+  const rounds = filtered.reduce((acc, match) => {
     if (!acc[match.round]) acc[match.round] = [];
     acc[match.round].push(match);
     return acc;
@@ -37,15 +56,18 @@ function SeasonSchedule({seasonID}) {
 
   return (
     <div>
-      {/* <p>This is the info for Season {seasonID}.</p>
-      <ul>
-          {season.map((m, i) => (
-            <li key={i}>
-              Round {m.round} Match {m.matchNo}: <Link to={`/team/${m.homeTeamID}`}>{m.homeTeamName}</Link> vs <Link to={`/team/${m.awayTeamID}`}>{m.awayTeamName}</Link> — {m.scheduledDate}
-            </li>
-            // <li></li>
+      {/* Filter Dropdown */}
+      <br></br>
+      <label>
+        Filter by team: {" "}
+        <select value={selectedTeam} onChange={e => setSelectedTeam(e.target.value)}>
+          <option value=''>All Teams</option>
+          {Object.entries(teamList).map(([id, name]) => (
+            <option key={id} value={id}>{name}</option>
           ))}
-        </ul> */}
+        </select>
+      </label>
+
       {Object.entries(rounds).map(([round, matches]) => {
           const roundDate = new Date(matches[0].scheduledDate);
           const roundDateStr = roundDate.toLocaleDateString(undefined, {
