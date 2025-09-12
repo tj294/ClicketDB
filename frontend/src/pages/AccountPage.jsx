@@ -8,6 +8,11 @@ export default function LoginPage() {
     const [details, setDetails] = useState([]);
     const [begSuccess, setBegSuccess] = useState(null);
     const [begError, setBegError] = useState(null);
+    const [showPswd, setShowPswd] = useState(false);
+    const [loginError, setLoginError] = useState(null);
+    const [loginSuccess, setLoginSuccess] = useState(null);
+    const [createError, setCreateError] = useState(null);
+    const [createSuccess, setCreateSuccess] = useState(null);
 
     const teamList = {
         1: 'Lincoln Lightning',
@@ -54,6 +59,48 @@ export default function LoginPage() {
             window.location.reload();
         }
     }
+    
+    async function handleLogin(e) {
+        e.preventDefault();
+        setLoginError(null);
+        setLoginSuccess(null);
+        
+        const formData = new FormData(e.currentTarget);
+        
+        const res = await fetch("/api/account/login", {
+        method: 'POST',
+        body: formData,
+        credentials: "include"
+        });
+        
+        const data = await res.json();
+        if (data['logged-in'] === 1) {
+        setLoginSuccess("Logged In!");
+        setUser(data.username);
+        } else {
+        setLoginError(data.error);
+        }
+        window.location.reload();
+    }
+    
+    async function handleSignup(e) {
+        e.preventDefault();
+        setCreateError(null);
+        setCreateSuccess(null);
+        
+        const formData = new FormData(e.target);
+        const res = await fetch('/api/account/create', {
+        method: 'POST',
+        body: formData,
+        });
+        
+        const data = await res.json();
+        if (data['account-created'] === 1) {
+        setCreateSuccess("Account created! Please log in.");
+        } else {
+        setCreateError(data.error);
+        }
+    }
 
     async function updateFavTeam(userID, teamID) {
         const data = { userID, teamID };
@@ -63,20 +110,18 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (user) {
-            fetch(`/api/account/detail/${user}`)
+            fetch(`/api/account/detail/${user.userID}`)
                 .then(res => res.json())
                 .then((data) => setDetails(data))
                 .catch(err => console.error(err));
         }
     }, [user]);
     
-    console.log(details);
  
     if (user) {
         return (
             <div>
-                <h1>Logged in: {details.uname}</h1>
-                {console.log(colorList[12])}
+                <h1>Logged in: {user.username}</h1>
                 <p>Favourite Team: 
                     <select value={details.favTeam ?? ""}
                         name='favTeam'
@@ -98,7 +143,7 @@ export default function LoginPage() {
                         >{tName}</option>
                     ))}
                 </select></p>
-                <p>Total Coins: <FontAwesomeIcon icon='fa-coins' /> {details.coins} <button className='beg-button' onClick={() => { handleBeg(details.ID) }}>BEG</button>
+                <p>Total Coins: <FontAwesomeIcon icon='fa-coins' /> {details.coins} <button className='beg-button' onClick={() => { handleBeg(details.ID) }} title="If you run out of coins, you can beg to get 10!">BEG</button>
                     {begError && <span style={{ color: 'red' }}> {begError}</span>}
                 </p>
             </div>
@@ -106,11 +151,36 @@ export default function LoginPage() {
     } else {
         return (
             <div>
-                <h1>Log In</h1>
-                <form>
-                    <h2>Username</h2>
-                    <h2>Password</h2>
+                <h1>Log In...</h1>
+                <form onSubmit={handleLogin} target='_self'>
+                    <label htmlFor='uname'><b>Username:</b></label><br />
+                    <input type='text' placeholder="Enter Username" name="uname" required></input>
+                    <br /><br />
+                    <label htmlFor='pswd'><b>Password:</b></label> <br />
+                    <input type='password' placeholder="Enter Password" name='pswd' required></input>
+                    <br /> <br />
+                    <button type="submit">Login</button>
                 </form>
+                {loginError && <p style={{ color: "red" }}>{loginError}</p>}
+                {loginSuccess && <p style={{ color: "green" }}>{loginSuccess}</p>}
+                <h1>...or Create Account</h1>
+                <form onSubmit={handleSignup} target="_blank">
+                    <label htmlFor='uname'><b>Username:</b></label><br />
+                    <input type='text' placeholder='Create Username' name='uname' required></input>
+                    <br /><br />
+                    <label htmlFor="pswd"><b>Create Password:</b></label><br />
+                    <input type={`${showPswd ? 'text' : 'password'}`} placeholder='Password' name='pswd' required></input>
+                    <br /><br />
+                    <label htmlFor="conf-pswd"><b>Confirm Password:</b></label><br />
+                    <input type={`${showPswd ? 'text' : 'password'}`} placeholder="Confirm Password" name='conf_pswd' required></input>
+                    <br /><br />
+                    <input type='checkbox' onClick={() => setShowPswd(!showPswd)} name='show-pass'></input>
+                    <label htmlFor='show-pass'> Show Password</label>
+                    <br /> <br />
+                    <button type='submit'>Sign-Up</button>
+                </form>
+                {createError && <p style={{ color: "red" }}>{createError}</p>}
+                {createSuccess && <p style={{ color: "green" }}>{createSuccess}</p>}
             </div>
         )
     }

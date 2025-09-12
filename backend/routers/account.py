@@ -69,12 +69,12 @@ def create_login(uname: Annotated[str, Form()], pswd: Annotated[str, Form()], co
                 conn.close()
                 return {"account-created": 1}
         
-@router.get("/detail/{uname}")
-def get_user_info(uname):
+@router.get("/detail/{userID}")
+def get_user_info(userID):
         conn = sqlite3.connect(ACC_DB)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        row = cur.execute("SELECT * FROM users WHERE username=?;", (uname,)).fetchone()
+        row = cur.execute("SELECT * FROM users WHERE userID=?;", (userID,)).fetchone()
         return JSONResponse(content={"ID": row['userID'], "uname": row['username'], "favTeam": row['favTeam'], "coins": row['coins']}, status_code=200)
 
 @router.get("/me")
@@ -86,7 +86,11 @@ def me(request: Request):
                 return {"logged-in": 0}
         else:
                 print("Logged in as", user)
-                return {"logged-in": 1, "username": user}
+                conn = sqlite3.connect(ACC_DB)
+                cur = conn.cursor()
+                row = cur.execute("SELECT * FROM users WHERE username=?;", (user,)).fetchone()
+                print(row)
+                return {"logged-in": 1, "userID": row[0], "username": row[1], "favTeam": row[4], "coins": row[3]}
 
 @router.post("/logout")
 def logout():

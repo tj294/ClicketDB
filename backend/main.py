@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket, BackgroundTasks
 from models import fetch_all
-from routers import matches, teams, players, live, games, season, account
+from routers import matches, teams, players, live, games, season, account, bets
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List, final
 from datetime import datetime, timedelta
@@ -48,6 +48,7 @@ app.include_router(live.router)
 app.include_router(games.router)
 app.include_router(season.router)
 app.include_router(account.router)
+app.include_router(bets.router)
 
 async def check_matches():
     lock = FileLock("match_scheduler.lock")
