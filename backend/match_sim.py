@@ -1213,6 +1213,13 @@ def resolve_bets(conn, matchID: int, homeID, awayID, winnerID: int):
     ).fetchall()
     if homeID==winnerID:
         loserID = awayID
+    elif winnerID==-1:
+        conn.cursor().execute("UPDATE bets SET settled=0, won=0, payout=0 WHERE betID=?",
+                              (betID,))
+        conn.commit()
+        conn.close()
+        user_conn.close()
+        return
     else:
         loserID = homeID
 
