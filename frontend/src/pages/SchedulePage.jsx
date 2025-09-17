@@ -27,6 +27,10 @@ function MatchBetting({ match, user, played}) {
   const [amount, setAmount] = useState(0);
   const { updateCoins } = useAuth();
 
+  if (!user) {
+    return <></>
+  }
+  
   useEffect(() => {
     fetch(`/api/bets/${user.userID}/${match.matchID}`)
       .then(res => res.json())
