@@ -7,6 +7,7 @@ from typing import Annotated
 import sqlite3, json
 from dotenv import load_dotenv
 from os import getenv
+from datetime import datetime
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
@@ -103,13 +104,23 @@ def beg(userID):
         conn = sqlite3.connect(ACC_DB)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        uCoins = dict(cur.execute("SELECT coins FROM users WHERE userID=?;", (userID,)).fetchone())['coins']
-        if uCoins:
-                return JSONResponse({"status": 1, "error": "You have coins!"})
-        else:
-                cur.execute("UPDATE users SET coins=10 WHERE userID=?;", (userID,))
-                conn.commit()
-                return JSONResponse({"status": 0})
+        user = cur.execute("SELECT coins, last_beg FROM users WHERE userID=?;", (userID,)).fetchone()
+        if not user:
+                return JSONResponse({"status": 1, "error": "User not found"})
+        lastBeg = user['last_beg']
+        if lastBeg:
+                last_beg_dt = datetime.fromisoformat(lastBeg)
+                now = datetime.now()
+                if last_beg_dt.date() == now.date():
+                        conn.close()
+                        return JSONResponse({"status": 1, "error": "You've already begged today!"})
+        newCoins = user['coins'] + 10
+        cur.execute("UPDATE users SET coins=?, last_beg=? WHERE userID=?;",
+                    (newCoins, datetime.now().isoformat(), userID,)
+        )
+        conn.commit()
+        conn.close()
+        return JSONResponse({"status": 0})
 
 class FavTeamUpdate(BaseModel):
         userID: int
