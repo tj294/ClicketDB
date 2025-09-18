@@ -123,7 +123,7 @@ export default function LoginPage() {
             <div>
                 <h1>Logged in: {user.username}</h1>
                 <p>Favourite Team: 
-                    <select value={details.favTeam ?? ""}
+                    <select value={user.favTeam ?? ""}
                         name='favTeam'
                         id='favTeam'
                         onChange={(e) => {
@@ -132,9 +132,9 @@ export default function LoginPage() {
                                 ...prev,
                                 favTeam: newFav,
                             }));
-                            updateFavTeam(details.ID, newFav);
+                            updateFavTeam(user.ID, newFav);
                         }}
-                        style={{color: colorList[details.favTeam]}}
+                        style={{color: colorList[user.favTeam]}}
                     >
                     {Object.entries(teamList).map(([teamID, tName]) => (
                         <option key={teamID}
@@ -143,7 +143,7 @@ export default function LoginPage() {
                         >{tName}</option>
                     ))}
                 </select></p>
-                <p>Total Coins: <FontAwesomeIcon icon='fa-coins' /> {details.coins} <button className='beg-button' onClick={() => { handleBeg(details.ID) }} title="If you run out of coins, you can beg to get 10!">BEG</button>
+                <p>Total Coins: <FontAwesomeIcon icon='fa-coins' /> {user.coins} <button className='beg-button' onClick={() => { handleBeg(details.ID) }} title="If you run out of coins, you can beg to get 10!">BEG</button>
                     {begError && <span style={{ color: 'red' }}> {begError}</span>}
                 </p>
             </div>

@@ -30,7 +30,7 @@ function MatchBetting({ match, user, played}) {
   if (!user) {
     return <></>
   }
-  
+
   useEffect(() => {
     fetch(`/api/bets/${user.userID}/${match.matchID}`)
       .then(res => res.json())
@@ -60,7 +60,7 @@ function MatchBetting({ match, user, played}) {
       }),
     });
     
-    const newTotal = user.coins - parseInt(amount, 10); 
+    const newTotal = user.coins - parseInt(Math.abs(amount), 10);
     updateCoins(newTotal);
 
     const data = await res.json();
