@@ -5,7 +5,7 @@ import TeamsList from "./pages/TeamsList";
 import Live, { NoLivePage } from "./pages/Live";
 import Navbar from "./components/navbar";
 import PlayerPage from "./pages/PlayerPage";
-// import GamePage from "./pages/GamePage";
+import AboutPage from "./pages/AboutPage";
 import GamePage from "./pages/wsGamePage";
 import SchedulePage from "./pages/SchedulePage";
 import AccountPage from "./pages/AccountPage";
@@ -31,6 +31,7 @@ export default function App() {
                                 <Route path='/game/:id' element={<GamePage />} />
                                 <Route path='/schedule' element={<SchedulePage />} />
                                 <Route path='/account' element={<AccountPage />} />
+                                <Route path='/about' element={<AboutPage />} />
                         </Routes>
                 </AuthProvider>
         );
