@@ -20,7 +20,6 @@ export default function AboutPage() {
       <h2>Roadmap</h2>
       <p>Below, in no particular order, are a list of planned additions in Clicket's future. Implementation depends on me having enough time to work on them.</p>
       <ul>
-        <li>Fix the season table so that it only displays the current season.</li>
         <li>Improve the simulation to make player stats more important.</li>
         <li>Add the ability to spend coins on votes to improve your favourite team by adding attributes with special effects to players and teams.</li>
         <li>Add player retirements and player generation to keep the simulation fresh!</li>
