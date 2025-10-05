@@ -43,7 +43,7 @@ export default function HomePage() {
           <tbody>
             {league.map((team, i) => (
               <tr key={i}>
-                <td className='team-link'><Link to={`/team/${team.ID}`} className='team-link' style={{color: team.color}}>{team.name}</Link></td>
+                <td className='team-link'><Link to={`/team/${team.teamID}`} className='team-link' style={{color: team.color}}>{team.name}</Link></td>
                 <td>{team.played}</td>
                 <td>{team.wins}</td>
                 <td>{team.losses}</td>
