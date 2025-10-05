@@ -1205,6 +1205,7 @@ def update_career_stats(conn, matchID, home_players, away_players):
 
 def resolve_bets(conn, matchID: int, homeID, awayID, winnerID: int):
     user_conn = sqlite3.connect(USER_DB)
+    user_conn.row_factory = sqlite3.Row
     user_cur = user_conn.cursor()
 
     bets = conn.cursor().execute(
@@ -1214,10 +1215,9 @@ def resolve_bets(conn, matchID: int, homeID, awayID, winnerID: int):
     if homeID==winnerID:
         loserID = awayID
     elif winnerID==-1:
-        conn.cursor().execute("UPDATE bets SET settled=0, won=0, payout=0 WHERE betID=?",
-                              (betID,))
+        conn.cursor().execute("UPDATE bets SET settled=0, won=0, payout=0 WHERE matchID=?",
+                              (matchID,))
         conn.commit()
-        conn.close()
         user_conn.close()
         return
     else:
@@ -1510,11 +1510,12 @@ async def simulate_match(matchID, conn_man):
         UPDATE matches SET
                 matchPlayed = 1,
                 result = ?,
+                winTeamID = ?,
                 homeScore = ?,
                 awayScore = ?
         WHERE matchID = ?
     """,
-        (result, first_innings["runs"], second_innings["runs"], matchID),
+        (result, winID, first_innings["runs"], second_innings["runs"], matchID),
     )
     # asyncio.run(ball_update(matchID))
     await ball_update(matchID)

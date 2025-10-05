@@ -136,3 +136,22 @@ def changeFavTeam(update: FavTeamUpdate):
                     (update.teamID, update.userID))
         conn.commit()
         print(f"Updated User {update.userID}'s fave team to {update.teamID}")
+
+
+
+# SELECT
+#     t.teamID,
+#     t.name,
+#     SUM(CASE WHEN m.season = 1 AND (m.homeTeamID = t.teamID OR m.awayTeamID = t.teamID) AND m.matchPlayed = 1 THEN 1 ELSE 0 END) AS played,
+#     SUM(CASE WHEN m.season = 1 AND m.winTeamID = t.teamID THEN 1 ELSE 0 END) AS wins,
+#     SUM(CASE WHEN m.season = 1 AND m.winTeamID IS -1 AND (m.homeTeamID = t.teamID OR m.awayTeamID = t.teamID) THEN 1 ELSE 0 END) AS ties,
+#     SUM(CASE WHEN m.season = 1 AND m.winTeamID IS NOT NULL AND m.winTeamID != t.teamID AND (m.homeTeamID = t.teamID OR m.awayTeamID = t.teamID) THEN 1 ELSE 0 END) AS losses,
+#     (2 * SUM(CASE WHEN m.winTeamID = t.teamID THEN 1 ELSE 0 END)
+#      + 1 * SUM(CASE WHEN m.winTeamID IS NULL 
+#                     AND (m.homeTeamID = t.teamID OR m.awayTeamID = t.teamID) 
+#                     THEN 1 ELSE 0 END)) AS points
+# FROM teams t
+# LEFT JOIN matches m
+#     ON (t.teamID = m.homeTeamID OR t.teamID = m.awayTeamID)
+# GROUP BY t.teamID, t.name;
+# ORDER BY points DESC, wins DESC, 

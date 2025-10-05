@@ -1,4 +1,6 @@
+from sqlalchemy import JSON
 from fastapi import FastAPI, WebSocket, BackgroundTasks
+from fastapi.responses import JSONResponse
 from models import fetch_all
 from routers import matches, teams, players, live, games, season, account, bets
 from fastapi.middleware.cors import CORSMiddleware
@@ -95,7 +97,17 @@ async def generate_season():
               lock.release()
               logger.info("Lock Released.")
 
-
+def overs_to_float(overs: float, wickets: int) -> float:
+    """
+    Convert cricket overs stored as float (e.g. 17.4) into proper overs float.
+    If all out (10 wickets), overs = 20.0 regardless.
+    """
+    if wickets == 10:
+        return 20.0
+    overs = float(overs)
+    whole = int(overs)
+    balls = round((overs - whole) * 10)  # e.g. 17.4 -> balls=4
+    return whole + balls / 6.0
 
 @app.on_event("startup")
 def start_scheduler():
@@ -161,6 +173,69 @@ def get_league_table():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
+    teams = {row["teamID"]: {
+                "teamID": row["teamID"],
+                "name": row["name"],
+                "played": 0,
+                "wins": 0,
+                "losses": 0,
+                "ties": 0,
+                "points": 0,
+                "runs_scored": 0,
+                "runs_conceded": 0,
+                "overs_faced": 0.0,
+                "overs_bowled": 0.0,
+                "NRR": 0.0
+            } for row in cur.execute("SELECT teamID, name FROM teams;").fetchall()}
+    season = cur.execute('SELECT season FROM matches ORDER BY season DESC').fetchone()[0]
+    matches = cur.execute("SELECT * FROM matches WHERE season=? AND matchPlayed=1", (season,))
+    for m in matches:
+        home = teams[m['homeTeamID']]
+        away = teams[m['awayTeamID']]
+
+        home['played']+=1
+        away['played']+=1
+        print(m['winTeamID'])
+        if m['winTeamID'] < 0:
+            home['ties'] += 1
+            away['ties'] += 1
+            home['points'] += 1
+            away['points'] += 1
+        else:
+            if m['winTeamID'] == m['homeTeamID']:
+                 home['wins'] += 1
+                 away['losses'] += 1
+                 home['points'] += 2
+            elif m['winTeamID'] == m['awayTeamID']:
+                 away['wins'] += 1
+                 home['losses'] += 1
+                 away['points'] += 2
+
+        home['runs_scored'] += m['bfRuns']
+        home['runs_conceded'] += m['bsRuns']
+        away['runs_scored'] += m['bsRuns']
+        away['runs_conceded'] += m['bfRuns']
+
+        home['overs_faced'] += overs_to_float(m['bfOvers'], m['bfWickets'])
+        home['overs_bowled'] += overs_to_float(m['bsOvers'], m['bsWickets'])
+
+        away['overs_faced'] += overs_to_float(m['bsOvers'], m['bsWickets'])
+        away['overs_bowled'] += overs_to_float(m['bfOvers'], m['bfWickets'])
+    for t in teams.values():
+         if t['overs_faced'] > 0 and t['overs_bowled'] > 0:
+              t['NRR'] = round(
+                   (t['runs_scored'] / t['overs_faced']) - (t['runs_conceded'] / t['overs_bowled']),
+                   3
+              )
+    
+    standings = sorted(
+         teams.values(),
+         key=lambda x: (x['points'], x['NRR'], x['wins']),
+         reverse=True,
+    )
+
+    return JSONResponse(standings)
+
     cur.execute("""
         SELECT 
             teamID AS ID,
@@ -169,6 +244,7 @@ def get_league_table():
             gamesWon AS won,
             gamesLost AS lost,
             gamesTied AS tied,
+            color,
             CASE 
                 WHEN oversFaced > 0 AND oversBowled > 0
                 THEN ROUND((runsScored * 1.0 / oversFaced) - (runsConceded * 1.0 / oversBowled), 2)
@@ -183,6 +259,7 @@ def get_league_table():
         league.append({
             "ID": row['ID'],
             "name": row["name"],
+            "color": row['color'],
             "played": row['played'],
             "won": row['won'],
             "lost": row['lost'],
