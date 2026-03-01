@@ -1239,7 +1239,7 @@ def resolve_bets(conn, matchID: int, homeID, awayID, winnerID: int):
             # these rates need fixing, sometimes bets give smaller payout than bet!
             rate_team = victorWins / victorPlayed if victorPlayed > 0 else 0.5
             rate_opp = loserWins / loserPlayed if loserPlayed > 0 else 0.5
-            mult = round(1 + (rate_opp / rate_team), 2)
+            mult = round(1 + 0.5*(rate_opp / rate_team), 2)
             payout = int(amount*mult)
             # payout always more than bet, even if rate is bad)
             if payout <= amount:
