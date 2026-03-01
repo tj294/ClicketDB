@@ -1,0 +1,2 @@
+- Account Page: Favourite team can't be changed
+- On Prod branch, betting has no effect
