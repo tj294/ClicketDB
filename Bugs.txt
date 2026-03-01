@@ -1,2 +1,2 @@
-- Account Page: Favourite team can't be changed
-- On Prod branch, betting has no effect
+- Account Page: Favourite team can't be changed # Fixed 01-03-26
+- On Prod branch, begging has no effect # Fixed 01-03-26
