@@ -1,6 +1,0 @@
-- Site looks *crap* on mobile
-- GamePage Team Names lose color on Scoreboard tab
-- HomePage league table data not loading on Prod
-FIXED
-- Account Page: Favourite team can't be changed # Fixed 01-03-26
-- On Prod branch, begging has no effect # Fixed 01-03-26
