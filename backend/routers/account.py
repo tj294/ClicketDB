@@ -114,6 +114,9 @@ def beg(userID):
                 if last_beg_dt.date() == now.date():
                         conn.close()
                         return JSONResponse({"status": 1, "error": "You've already begged today!"})
+        if user['coins'] != 0:
+                conn.close()
+                return JSONResponse({"status": 1, "error": "You already have coins!"})
         newCoins = user['coins'] + 10
         cur.execute("UPDATE users SET coins=?, last_beg=? WHERE userID=?;",
                     (newCoins, datetime.now().isoformat(), userID,)
