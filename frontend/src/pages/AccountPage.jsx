@@ -14,6 +14,17 @@ export default function LoginPage() {
     const [createError, setCreateError] = useState(null);
     const [createSuccess, setCreateSuccess] = useState(null);
 
+    useEffect(() => {
+        if (begError || begSuccess) {
+            const timer = setTimeout(() => {
+                setBegError(null);
+                setBegSuccess(null);
+            }, 2500); // 3 seconds
+
+            return () => clearTimeout(timer);
+        }
+    }, [begError, begSuccess]);
+    
     const teamList = {
         1: 'Lincoln Lightning',
         2: 'Birmingham Bullfrogs',
@@ -153,6 +164,7 @@ export default function LoginPage() {
                 </select></p>
                 <p>Total Coins: <FontAwesomeIcon icon='fa-coins' /> {user.coins} <button className='beg-button' onClick={() => { handleBeg(user.userID) }} title="If you run out of coins, you can beg to get 10!">BEG</button>
                     {begError && <span style={{ color: 'red' }}> {begError}</span>}
+                    {begSuccess && <span style={{ color: 'green' }}> {begSuccess}</span>}
                 </p>
             </div>
         )
