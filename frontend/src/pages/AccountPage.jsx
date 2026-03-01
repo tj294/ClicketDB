@@ -56,7 +56,12 @@ export default function LoginPage() {
             setBegError(data.error);
             
         } else {
-            window.location.reload();
+            setUser(prev => ({
+                ...prev,
+                coins: prev.coins + 10
+            }));
+
+            setBegSuccess("You received 10 coins!");
         }
     }
     
@@ -80,7 +85,6 @@ export default function LoginPage() {
         } else {
         setLoginError(data.error);
         }
-        window.location.reload();
     }
     
     async function handleSignup(e) {
@@ -123,7 +127,7 @@ export default function LoginPage() {
             <div>
                 <h1>Logged in: {user.username}</h1>
                 <p>Favourite Team: 
-                    <select value={user.favTeam ?? ""}
+                    <select value={details.favTeam ?? ""}
                         name='favTeam'
                         id='favTeam'
                         onChange={(e) => {
@@ -132,7 +136,11 @@ export default function LoginPage() {
                                 ...prev,
                                 favTeam: newFav,
                             }));
-                            updateFavTeam(user.ID, newFav);
+                            setUser(prev => ({
+                                ...prev,
+                                favTeam: newFav
+                            }));
+                            updateFavTeam(user.userID, newFav);
                         }}
                         style={{color: colorList[user.favTeam]}}
                     >
@@ -143,7 +151,7 @@ export default function LoginPage() {
                         >{tName}</option>
                     ))}
                 </select></p>
-                <p>Total Coins: <FontAwesomeIcon icon='fa-coins' /> {user.coins} <button className='beg-button' onClick={() => { handleBeg(details.ID) }} title="If you run out of coins, you can beg to get 10!">BEG</button>
+                <p>Total Coins: <FontAwesomeIcon icon='fa-coins' /> {user.coins} <button className='beg-button' onClick={() => { handleBeg(user.userID) }} title="If you run out of coins, you can beg to get 10!">BEG</button>
                     {begError && <span style={{ color: 'red' }}> {begError}</span>}
                 </p>
             </div>
