@@ -1215,6 +1215,7 @@ def resolve_bets(conn, matchID: int, homeID, awayID, winnerID: int):
     if homeID==winnerID:
         loserID = awayID
     elif winnerID==-1:
+        # All bets lose on a tie
         conn.cursor().execute("UPDATE bets SET settled=0, won=0, payout=0 WHERE matchID=?",
                               (matchID,))
         conn.commit()
@@ -1235,16 +1236,20 @@ def resolve_bets(conn, matchID: int, homeID, awayID, winnerID: int):
 
     for betID, userID, teamID, amount in bets:
         if teamID == winnerID:
+            # these rates need fixing, sometimes bets give smaller payout than bet!
             rate_team = victorWins / victorPlayed if victorPlayed > 0 else 0.5
             rate_opp = loserWins / loserPlayed if loserPlayed > 0 else 0.5
-            mult = round(1 + (rate_opp - rate_team), 2)
+            mult = round(1 + (rate_opp / rate_team), 2)
             payout = int(amount*mult)
+            # payout always more than bet, even if rate is bad)
+            if payout <= amount:
+                payout = amount+1
             user_cur.execute("UPDATE users SET coins = coins+? WHERE userID=?",
                              (payout, userID,))
             conn.cursor().execute("UPDATE bets SET settled=1, won=1, payout=? WHERE betID=?",
                                 (payout, betID,))
         else:
-            conn.cursor().execute("UPDATE bets SET settled=0, won=0, payout=0 WHERE betID=?",
+            conn.cursor().execute("UPDATE bets SET settled=1, won=0, payout=0 WHERE betID=?",
                         (betID,))
     conn.commit()
     user_conn.commit()
