@@ -15,7 +15,7 @@ option {
     border: 2px solid white;
 }
 
-.beg-button:hover {
+.beg-button:hover, .beg-button:focus {
     cursor: pointer;
     background-color: cyan;
 }

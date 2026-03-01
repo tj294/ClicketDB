@@ -48,7 +48,6 @@ const Navbar = () => {
     });
     
     const data = await res.json();
-    console.log(data);
     if (data['account-created'] === 1) {
       setCreateSuccess("Account created! Please log in.");
     } else {
@@ -85,7 +84,7 @@ const Navbar = () => {
             //   }}>Logout</button>
             // </>
             <>
-              <a className='acc-name' onClick={() => setAccMenu(!accMenu)}><FontAwesomeIcon icon='fa-user' /> Acc: {user}</a>
+              <a className='acc-name' onClick={() => setAccMenu(!accMenu)}><FontAwesomeIcon icon='fa-user' /> Acc: {user.username}</a>
               <div className={`${accMenu ? 'account-menu' : 'hidden'}`}>
                 <a href='/account'>Account Details</a>
                 <a onClick={() => {

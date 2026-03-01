@@ -224,6 +224,7 @@ CREATE TABLE IF NOT EXISTS matches (
     scheduledDate TEXT,
     matchPlayed INTEGER DEFAULT 0,
     result TEXT DEFAULT TBC,
+    winTeamID INTEGER,
     homeScore TEXT DEFAULT YTB,
     awayScore TEXT DEFAULT YTB,
     log TEXT DEFAULT NULL,
@@ -310,5 +311,20 @@ with open(filename, "w", newline="") as f:
 print(f"Fixtures exported to {filename}")
 
 visualize_schedule_distribution()
+
+cursor.execute(
+    """
+        CREATE TABLE bets (
+            betID INTEGER PRIMARY KEY AUTOINCREMENT,
+            userID INTEGER NOT NULL,
+            matchID INTEGER NOT NULL,
+            teamID INTEGER NOT NULL,
+            amount INTEGER NOT NULL,
+            settled INTEGER DEFAULT 0,
+            won INTEGER DEFAULT NULL,
+            payout INTEGER DEFAULT 0
+        );
+    """
+)
 
 conn.close()

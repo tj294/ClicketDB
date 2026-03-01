@@ -25,14 +25,6 @@ export default function HomePage() {
   return (
     <div className="main" style={{ padding: "20px", fontFamily: "Trebuchet MS"}}>
        <h1>🏏 Clicket</h1>
-        <h2>Upcoming Matches</h2>
-        <ul>
-          {matches.map((m, i) => (
-            <li key={i}>
-              <Link to={`/game/${m.ID}`}>{m.team1} vs {m.team2} — {m.scheduledDate}</Link>
-            </li>
-          ))}
-        </ul>
       <h2>League Table</h2>
       <div className="league-table">
         <table border="1" cellPadding="5">
@@ -47,21 +39,30 @@ export default function HomePage() {
               <th>NRR</th>
             </tr>
           </thead>
+          {console.table(league)}
           <tbody>
             {league.map((team, i) => (
               <tr key={i}>
-                <td className='team-link'><Link to={`/team/${team.ID}`} className='team-link'>{team.name}</Link></td>
+                <td className='team-link'><Link to={`/team/${team.teamID}`} className='team-link' style={{color: team.color}}>{team.name}</Link></td>
                 <td>{team.played}</td>
-                <td>{team.won}</td>
-                <td>{team.lost}</td>
-                <td>{team.tied}</td>
-                <td>{team.won * 2.0 + team.tied*1.0}</td>
+                <td>{team.wins}</td>
+                <td>{team.losses}</td>
+                <td>{team.ties}</td>
+                <td>{team.points}</td>
                 <td>{team.NRR}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <h2>Upcoming Matches</h2>
+        <ul>
+          {matches.map((m, i) => (
+            <li key={i}>
+              <Link to={`/game/${m.ID}`}>{m.team1} vs {m.team2} — {m.scheduledDate}</Link>
+            </li>
+          ))}
+        </ul>
     </div>
   );
 }

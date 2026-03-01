@@ -11,9 +11,10 @@ from classes import Odds, rand, ConnectionManager
 
 load_dotenv()
 DB_NAME = getenv("DBNAME")
-BALL_PAUSE = 4  # seconds (4)
-OVER_PAUSE = 5  # seconds (5)
-INNINGS_PAUSE = 10  # seconds (10)
+USER_DB = getenv("ACC_DB")
+BALL_PAUSE = 0  # seconds (4)
+OVER_PAUSE = 0  # seconds (5)
+INNINGS_PAUSE = 0  # seconds (10)
 
 
 async def ball_update(matchID):
@@ -1202,6 +1203,60 @@ def update_career_stats(conn, matchID, home_players, away_players):
     conn.commit()
 
 
+def resolve_bets(conn, matchID: int, homeID, awayID, winnerID: int):
+    user_conn = sqlite3.connect(USER_DB)
+    user_conn.row_factory = sqlite3.Row
+    user_cur = user_conn.cursor()
+
+    bets = conn.cursor().execute(
+        "SELECT betID, userID, teamID, amount FROM bets WHERE matchID=? AND settled=0",
+        (matchID,)
+    ).fetchall()
+    if homeID==winnerID:
+        loserID = awayID
+    elif winnerID==-1:
+        # All bets lose on a tie
+        conn.cursor().execute("UPDATE bets SET settled=0, won=0, payout=0 WHERE matchID=?",
+                              (matchID,))
+        conn.commit()
+        user_conn.close()
+        return
+    else:
+        loserID = homeID
+
+    victorWins, victorPlayed = conn.cursor().execute(
+        "SELECT gamesWon, gamesPlayed FROM teams WHERE teamID=?",
+        (winnerID,)
+    ).fetchone()
+    loserWins, loserPlayed = conn.cursor().execute(
+        "SELECT gamesWon, gamesPlayed FROM teams WHERE  teamID=?",
+        (loserID,)
+    ).fetchone()
+
+
+    for betID, userID, teamID, amount in bets:
+        if teamID == winnerID:
+            # these rates need fixing, sometimes bets give smaller payout than bet!
+            rate_team = victorWins / victorPlayed if victorPlayed > 0 else 0.5
+            rate_opp = loserWins / loserPlayed if loserPlayed > 0 else 0.5
+            mult = round(1 + 0.5*(rate_opp / rate_team), 2)
+            payout = int(amount*mult)
+            # payout always more than bet, even if rate is bad)
+            if payout <= amount:
+                payout = amount+1
+            user_cur.execute("UPDATE users SET coins = coins+? WHERE userID=?",
+                             (payout, userID,))
+            conn.cursor().execute("UPDATE bets SET settled=1, won=1, payout=? WHERE betID=?",
+                                (payout, betID,))
+        else:
+            conn.cursor().execute("UPDATE bets SET settled=1, won=0, payout=0 WHERE betID=?",
+                        (betID,))
+    conn.commit()
+    user_conn.commit()
+    user_conn.close()
+
+
+
 async def simulate_match(matchID, conn_man):
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
@@ -1299,6 +1354,7 @@ async def simulate_match(matchID, conn_man):
     # * Determine Winner
     if first_innings["runs"] > second_innings["runs"]:
         result = f"{homeTeamName} win!"
+        winID = homeTeamID
         print(f"{homeTeamName} win!")
         update_log(
             liveID, conn, f"Match Over!", f"{homeTeamName} win!", tag="result-comm"
@@ -1353,6 +1409,7 @@ async def simulate_match(matchID, conn_man):
         )
     elif second_innings["runs"] > first_innings["runs"]:
         result = f"{awayTeamName} win!"
+        winID = awayTeamID
         print(f"{awayTeamName} win!")
         update_log(
             liveID, conn, f"Match Over!", f"{awayTeamName} win!", tag="result-comm"
@@ -1408,6 +1465,7 @@ async def simulate_match(matchID, conn_man):
     else:
         result = "Tied game!"
         print("The game is a tie!")
+        winID = -1
         update_log(liveID, conn, f"Match Over!", f"It's a tie!", tag="result-comm")
         cur.execute(
             """
@@ -1457,14 +1515,18 @@ async def simulate_match(matchID, conn_man):
         UPDATE matches SET
                 matchPlayed = 1,
                 result = ?,
+                winTeamID = ?,
                 homeScore = ?,
                 awayScore = ?
         WHERE matchID = ?
     """,
-        (result, first_innings["runs"], second_innings["runs"], matchID),
+        (result, winID, first_innings["runs"], second_innings["runs"], matchID),
     )
     # asyncio.run(ball_update(matchID))
     await ball_update(matchID)
+
+    resolve_bets(conn, matchID, homeTeamID, awayTeamID, winID)
+
     conn.commit()
     conn.close()
 

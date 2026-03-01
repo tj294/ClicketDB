@@ -46,12 +46,17 @@
 .account-menu {
   position: absolute;
   right: 1%;
-  top: 10%;
+  top: 15%;
   background-color: #444;
   display: flex;
   flex-direction: column;
   row-gap: 1em;
   padding: 1em;
+  z-index: 1000;
+}
+
+.account-menu > a {
+  text-decoration: none;
 }
 
 .hidden {

@@ -7,6 +7,7 @@ from typing import Annotated
 import sqlite3, json
 from dotenv import load_dotenv
 from os import getenv
+from datetime import datetime
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
@@ -69,12 +70,12 @@ def create_login(uname: Annotated[str, Form()], pswd: Annotated[str, Form()], co
                 conn.close()
                 return {"account-created": 1}
         
-@router.get("/detail/{uname}")
-def get_user_info(uname):
+@router.get("/detail/{userID}")
+def get_user_info(userID):
         conn = sqlite3.connect(ACC_DB)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        row = cur.execute("SELECT * FROM users WHERE username=?;", (uname,)).fetchone()
+        row = cur.execute("SELECT * FROM users WHERE userID=?;", (userID,)).fetchone()
         return JSONResponse(content={"ID": row['userID'], "uname": row['username'], "favTeam": row['favTeam'], "coins": row['coins']}, status_code=200)
 
 @router.get("/me")
@@ -86,7 +87,11 @@ def me(request: Request):
                 return {"logged-in": 0}
         else:
                 print("Logged in as", user)
-                return {"logged-in": 1, "username": user}
+                conn = sqlite3.connect(ACC_DB)
+                cur = conn.cursor()
+                row = cur.execute("SELECT * FROM users WHERE username=?;", (user,)).fetchone()
+                print(row)
+                return {"logged-in": 1, "userID": row[0], "username": row[1], "favTeam": row[4], "coins": row[3]}
 
 @router.post("/logout")
 def logout():
@@ -99,13 +104,26 @@ def beg(userID):
         conn = sqlite3.connect(ACC_DB)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        uCoins = dict(cur.execute("SELECT coins FROM users WHERE userID=?;", (userID,)).fetchone())['coins']
-        if uCoins:
-                return JSONResponse({"status": 1, "error": "You have coins!"})
-        else:
-                cur.execute("UPDATE users SET coins=10 WHERE userID=?;", (userID,))
-                conn.commit()
-                return JSONResponse({"status": 0})
+        user = cur.execute("SELECT coins, last_beg FROM users WHERE userID=?;", (userID,)).fetchone()
+        if not user:
+                return JSONResponse({"status": 1, "error": "User not found"})
+        lastBeg = user['last_beg']
+        if lastBeg:
+                last_beg_dt = datetime.fromisoformat(lastBeg)
+                now = datetime.now()
+                if last_beg_dt.date() == now.date():
+                        conn.close()
+                        return JSONResponse({"status": 1, "error": "You've already begged today!"})
+        if user['coins'] != 0:
+                conn.close()
+                return JSONResponse({"status": 1, "error": "You already have coins!"})
+        newCoins = user['coins'] + 10
+        cur.execute("UPDATE users SET coins=?, last_beg=? WHERE userID=?;",
+                    (newCoins, datetime.now().isoformat(), userID,)
+        )
+        conn.commit()
+        conn.close()
+        return JSONResponse({"status": 0})
 
 class FavTeamUpdate(BaseModel):
         userID: int
@@ -121,3 +139,22 @@ def changeFavTeam(update: FavTeamUpdate):
                     (update.teamID, update.userID))
         conn.commit()
         print(f"Updated User {update.userID}'s fave team to {update.teamID}")
+
+
+
+# SELECT
+#     t.teamID,
+#     t.name,
+#     SUM(CASE WHEN m.season = 1 AND (m.homeTeamID = t.teamID OR m.awayTeamID = t.teamID) AND m.matchPlayed = 1 THEN 1 ELSE 0 END) AS played,
+#     SUM(CASE WHEN m.season = 1 AND m.winTeamID = t.teamID THEN 1 ELSE 0 END) AS wins,
+#     SUM(CASE WHEN m.season = 1 AND m.winTeamID IS -1 AND (m.homeTeamID = t.teamID OR m.awayTeamID = t.teamID) THEN 1 ELSE 0 END) AS ties,
+#     SUM(CASE WHEN m.season = 1 AND m.winTeamID IS NOT NULL AND m.winTeamID != t.teamID AND (m.homeTeamID = t.teamID OR m.awayTeamID = t.teamID) THEN 1 ELSE 0 END) AS losses,
+#     (2 * SUM(CASE WHEN m.winTeamID = t.teamID THEN 1 ELSE 0 END)
+#      + 1 * SUM(CASE WHEN m.winTeamID IS NULL 
+#                     AND (m.homeTeamID = t.teamID OR m.awayTeamID = t.teamID) 
+#                     THEN 1 ELSE 0 END)) AS points
+# FROM teams t
+# LEFT JOIN matches m
+#     ON (t.teamID = m.homeTeamID OR t.teamID = m.awayTeamID)
+# GROUP BY t.teamID, t.name;
+# ORDER BY points DESC, wins DESC, 
