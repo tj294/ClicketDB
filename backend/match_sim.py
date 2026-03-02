@@ -12,9 +12,10 @@ from classes import Odds, rand, ConnectionManager
 load_dotenv()
 DB_NAME = getenv("DBNAME")
 USER_DB = getenv("ACC_DB")
-BALL_PAUSE = 0  # seconds (4)
-OVER_PAUSE = 0  # seconds (5)
-INNINGS_PAUSE = 0  # seconds (10)
+# Timings if called by other code (like task manager)
+BALL_PAUSE = 4  # seconds (4)
+OVER_PAUSE = 5  # seconds (5)
+INNINGS_PAUSE = 10  # seconds (10)
 
 
 async def ball_update(matchID):
@@ -1581,7 +1582,8 @@ if __name__ == "__main__":
         matchID = sys.argv[1]
     else:
         matchID = 0
-
+    
+    # Timings if manually called (quicker)
     BALL_PAUSE = 0  # seconds (4)
     OVER_PAUSE = 0  # seconds (5)
     INNINGS_PAUSE = 0  # seconds (10)
