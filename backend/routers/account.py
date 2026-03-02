@@ -88,10 +88,11 @@ def me(request: Request):
         else:
                 print("Logged in as", user)
                 conn = sqlite3.connect(ACC_DB)
+                conn.row_factory = sqlite3.Row
                 cur = conn.cursor()
-                row = cur.execute("SELECT * FROM users WHERE username=?;", (user,)).fetchone()
-                print(row)
-                return {"logged-in": 1, "userID": row[0], "username": row[1], "favTeam": row[4], "coins": row[3]}
+                row = cur.execute("SELECT userID, username, coins, favTeam FROM users WHERE username=?;", (user,)).fetchone()
+                print(dict(row))
+                return {"logged-in": 1, "userID": row["userID"], "username": row["username"], "favTeam": row["favTeam"], "coins": row["coins"]}
 
 @router.post("/logout")
 def logout():
