@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function LoginPage() {
     const { user, setUser } = useAuth();
-    const [details, setDetails] = useState([]);
     const [begSuccess, setBegSuccess] = useState(null);
     const [begError, setBegError] = useState(null);
     const [showPswd, setShowPswd] = useState(false);
@@ -122,38 +121,26 @@ export default function LoginPage() {
         fetch(`/api/account/favTeam`, { method: 'POST', headers: { "Content-Type": "application/json", }, body: JSON.stringify(data) })
         
     }
-
-    useEffect(() => {
-        if (user) {
-            fetch(`/api/account/detail/${user.userID}`)
-                .then(res => res.json())
-                .then((data) => setDetails(data))
-                .catch(err => console.error(err));
-        }
-    }, [user]);
-    
  
     if (user) {
         return (
             <div>
                 <h1>Logged in: {user.username}</h1>
+                {console.log(user)}
                 <p>Favourite Team: 
-                    <select value={details.favTeam ?? ""}
+                    <select value={user.favTeam ?? ""}
                         name='favTeam'
                         id='favTeam'
                         onChange={(e) => {
-                            const newFav = e.target.value;
-                            setDetails((prev) => ({
+                            const newFav = Number(e.target.value);
+                            
+                            setUser(prev => ({
                                 ...prev,
                                 favTeam: newFav,
                             }));
-                            setUser(prev => ({
-                                ...prev,
-                                favTeam: newFav
-                            }));
                             updateFavTeam(user.userID, newFav);
                         }}
-                        style={{color: colorList[user.favTeam]}}
+                        style={{color: colorList[user.favTeam] ?? "white" }}
                     >
                     {Object.entries(teamList).map(([teamID, tName]) => (
                         <option key={teamID}
