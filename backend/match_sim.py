@@ -1039,7 +1039,7 @@ async def simulate_innings(
             await asyncio.sleep(BALL_PAUSE)
             if wickets >= 10:
                 break
-            if target > 0 and total_runs > target:
+            if target > 0 and total_runs >= target:
                 matchOver = True
                 break
 
