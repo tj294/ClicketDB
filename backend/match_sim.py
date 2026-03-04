@@ -7,7 +7,7 @@ from itertools import chain
 from dotenv import load_dotenv
 from os import getenv
 
-from classes import Odds, rand, ConnectionManager
+from classes import Odds, rand, ConnectionManager, BatterState, MatchContext, OddsLogger
 
 load_dotenv()
 DB_NAME = getenv("DBNAME")
@@ -349,7 +349,7 @@ def get_description(batter, bowler, ball):
         desc = desc.replace("BOWLER", f"{bowler['fname']} {bowler['lname']}")
     except UnboundLocalError:
         print(f"For ball {ball} and lineNo {lineNo}, no description generated.")
-    print(desc)
+    # print(desc)
     return desc
 
 
@@ -871,7 +871,7 @@ def update_scorecard(liveID, conn, batting_team, bowling_team, target):
     return
 
 
-def get_outcome(batter, bowler):
+def get_outcome(batter, bowler, batter_state, match_context=None):
     ball_odds = random.uniform(0, 1)
     bat_stat = [
         rand(batter["power"]),
@@ -885,54 +885,68 @@ def get_outcome(batter, bowler):
         rand(bowler["accuracy"]),
         rand(bowler["length"]),
     )
-    odds = Odds(bat_stat, bowl_stat)
+    # Ascertain Base Stats:
+    # 
+    odds_base = Odds(bat_stat, bowl_stat)
+
+    odds = Odds(bat_stat, bowl_stat, batter_attributes=batter.get("attributes", []),
+                bowler_attributes=bowler.get("attributes", []),
+                batter_state=batter_state, match_context=match_context)
+    
     if ball_odds < odds.run_total(odds.wicket):
         batter["B"] += 1
         # bowler['O'] += 0.1
         bowler["W"] += 1
-        return 0, "W", "WICKET"
+        batter_state.record_ball(0)
+        return 0, "W", "WICKET", odds_base, odds
     elif ball_odds < odds.run_total(odds.wide):
         bowler["RC"] += 1
-        return 1, "+", "Wide"
+        return 1, "+", "Wide", odds_base, odds
     elif ball_odds < odds.run_total(odds.noBall):
         bowler["RC"] += 1
-        return 1, "O", "No Ball"
+        return 1, "O", "No Ball", odds_base, odds
     elif ball_odds < odds.run_total(odds.dotBall):
         batter["B"] += 1
         # bowler['O'] += 0.1
-        return 0, "·", "Dot"
+        batter_state.record_ball(0)
+        return 0, "·", "Dot", odds_base, odds
     elif ball_odds < odds.run_total(odds.oneRun):
         batter["B"] += 1
         batter["RS"] += 1
         # bowler['O'] += 0.1
         bowler["RC"] += 1
-        return 1, "1", "Single"
+        batter_state.record_ball(1)
+        return 1, "1", "Single", odds_base, odds
     elif ball_odds < odds.run_total(odds.twoRuns):
         batter["B"] += 1
         batter["RS"] += 2
         # bowler['O'] += 0.1
         bowler["RC"] += 2
-        return 2, "2", "Double"
+        batter_state.record_ball(2)
+        return 2, "2", "Double", odds_base, odds
     elif ball_odds < odds.run_total(odds.threeRuns):
         batter["B"] += 1
         batter["RS"] += 3
         # bowler['O'] += 0.1
         bowler["RC"] += 3
-        return 3, "3", "Three"
+        batter_state.record_ball(3)
+        return 3, "3", "Three", odds_base, odds
     elif ball_odds < odds.run_total(odds.fourRuns):
         batter["B"] += 1
         batter["RS"] += 4
         batter["4s"] += 1
         # bowler['O'] += 0.1
         bowler["RC"] += 4
-        return 4, "4", "FOUR"
+        batter_state.record_ball(4)
+        return 4, "4", "FOUR", odds_base, odds
     else:
         batter["B"] += 1
         batter["RS"] += 6
         batter["6s"] += 1
         # bowler['O'] += 0.1
         bowler["RC"] += 6
-        return 6, "6", "SIX"
+        batter_state.record_ball(6)
+        return 6, "6", "SIX", odds_base, odds
 
 
 async def simulate_innings(
@@ -968,6 +982,20 @@ async def simulate_innings(
     bowling_team[nsbowler_index]["M"] = 0
     bowling_team[nsbowler_index]["RC"] = 0
     bowling_team[nsbowler_index]["W"] = 0
+
+    batter_states = {}
+
+    def get_batter_state(player):
+        pid = player['playerID']
+        if pid not in batter_states:
+            batter_states[pid] = BatterState()
+        return batter_states[pid]
+
+    innings_number = 1 if target == -1 else 2
+    match_target = None if target == -1 else target
+    innings_label = "innings1" if target == -1 else "innings2"
+    # oddsLog = OddsLogger(f"oddslogs/match_{liveID}_innings{innings_number}.jsonl")
+
     log = []
     matchOver = False
     while over < max_overs and wickets < 10 and not matchOver:
@@ -980,7 +1008,20 @@ async def simulate_innings(
         while ball_in_over < 6:
             batter = batting_team[striker_index]
             non_striker = batting_team[non_striker_index]
-            runs, result, event = get_outcome(batter, sbowler)
+
+            balls_remaining = (max_overs * 6) - balls
+            context = MatchContext(
+                innings=innings_number,
+                balls_remaining=balls_remaining,
+                wickets_in_hand=10-wickets,
+                target=match_target,
+                current_score=total_runs,
+            )
+            batter_state = get_batter_state(batter)
+
+            runs, result, event, odds_base, odds_final = get_outcome(batter, sbowler, batter_state, context)
+            # oddsLog.log(over, ball_in_over, batter, sbowler, # None, None,
+            #             odds_base, odds_final, batter_state, context, result, runs)
             runs_this_over += runs
             desc = get_description(batter, sbowler, result)
 
@@ -1012,6 +1053,7 @@ async def simulate_innings(
                     batting_team[striker_index]["4s"] = 0
                     batting_team[striker_index]["6s"] = 0
                     batting_team[striker_index]["howOut"] = "Not Out"
+                    batter_states[batting_team[striker_index]["playerID"]] = BatterState()
             else:
                 total_runs += runs
                 if runs % 2 == 1:
