@@ -21,3 +21,6 @@ jobs.sqlite
 settings.json
 *.png
 *.pptx
+plot_odds.py
+
+oddslogs/
