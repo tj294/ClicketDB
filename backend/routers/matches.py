@@ -20,3 +20,20 @@ def live_match():
 def past_matches():
     query = "SELECT * FROM matches WHERE matchPlayed = 1 ORDER BY scheduledDate DESC"
     return fetch_all(query)
+
+@router.get("/recent/{homeTeamID}/{awayTeamID}")
+def get_recent_results(homeTeamID, awayTeamID):
+    query = f"""SELECT
+                    matchID, homeTeamID, awayTeamID, winTeamID 
+                FROM 
+                    matches 
+                WHERE 
+                    matchPlayed = 1 
+                AND 
+                    (homeTeamID={homeTeamID} OR awayTeamID={homeTeamID}) 
+                AND 
+                    (homeTeamID={awayTeamID} OR awayTeamID={awayTeamID}) 
+                ORDER BY matchNo DESC 
+                LIMIT 5
+            """
+    return fetch_all(query)

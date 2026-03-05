@@ -26,6 +26,7 @@ function MatchBetting({ match, user, played}) {
   const [bet, setBet] = useState(null);
   const [amount, setAmount] = useState(0);
   const { updateCoins } = useAuth();
+  const [recents, setRecents] = useState(null);
 
   if (!user) {
     return <></>
@@ -40,7 +41,13 @@ function MatchBetting({ match, user, played}) {
         }
         });
   }, [match.matchID, user.userID]);
-
+  
+  useEffect(() => {
+    fetch(`api/matches/recent/${match.homeTeamID}/${match.awayTeamID}`)
+      .then(res => res.json())
+      .then(data => { setRecents(data) });
+  }, [match.homeTeamID, match.awayTeamID]);
+  
   const handlePlaceBet = async (amount, homeTeamID, awayTeamID) => {
     let teamID;
     if (amount < 0) {
@@ -130,6 +137,51 @@ function MatchBetting({ match, user, played}) {
                 appearance: "none",
               }}
             />
+            {recents && recents.length > 0 && (
+              <div className="head-to-head">
+                <p><strong>Last {recents?.length || 0} Head-to-Head Results</strong></p>
+                {!recents || recents.length === 0 ? (
+                  <p style={{ fontSize: "0.85rem" }}>No previous meetings</p>
+                ) : (
+                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", justifyContent: 'center'}}>
+                    {[...recents].sort((a, b) => a.matchID - b.matchID).map((r) => {
+                      const isDraw = r.winTeamID === -1;
+                      const isHomeWin = r.winTeamID === match.homeTeamID;
+                      const bgColor = isDraw ? "white" : isHomeWin ? match.homeTeamColor : match.awayTeamColor;
+                      const textColor = isDraw ? "black" : "white";
+                      const initials = isDraw
+                        ? "T"
+                        : teamList[r.winTeamID].split(" ").map(w => w[0]).join("");
+
+                      return (
+                        <Link
+                          key={r.matchID}
+                          to={`/game/${r.matchID}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "2.2rem",
+                            height: "2.2rem",
+                            borderRadius: "0.3rem",
+                            backgroundColor: bgColor,
+                            color: textColor,
+                            fontSize: "1em",
+                            fontWeight: "bold",
+                            textDecoration: "none",
+                            border: isDraw ? "1px solid #ccc" : "none",
+                            flexShrink: 0,
+                          }}
+                          title={isDraw ? "Draw" : `${teamList[r.winTeamID]} won`}
+                        >
+                          {initials}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
             <button disabled={amount === 0} onClick={() => handlePlaceBet(amount, match.homeTeamID, match.awayTeamID)}>Place Bet</button>
           </div>
         )}
